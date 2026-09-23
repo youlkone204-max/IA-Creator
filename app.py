@@ -1,48 +1,24 @@
 import streamlit as st
 from google import genai
 
-# =========================================================
-# CONFIGURATION
-# =========================================================
-
 st.set_page_config(
     page_title="IA-Creator",
     page_icon="🤖",
     layout="centered"
 )
 
-# =========================================================
-# TITRE
-# =========================================================
-
 st.title("🤖 IA-Creator")
+st.write("Apprends • Crée • Développe tes idées avec l'intelligence artificielle")
 
-st.write(
-    "Apprends • Crée • Développe tes idées avec l'intelligence artificielle"
-)
-
-# =========================================================
-# CONNEXION GEMINI
-# =========================================================
-
+# Connexion Gemini
 try:
-
     api_key = st.secrets["GEMINI_API_KEY"]
-
-    client = genai.Client(
-        api_key=api_key
-    )
-
+    client = genai.Client(api_key=api_key)
 except Exception:
-
-    st.error("❌ Impossible de charger la clé Gemini.")
-
+    st.error("Impossible de charger la clé Gemini.")
     st.stop()
 
-# =========================================================
-# TYPE DE CRÉATION
-# =========================================================
-
+# Type de création
 st.subheader("🚀 Que veux-tu créer ?")
 
 type_creation = st.selectbox(
@@ -56,10 +32,7 @@ type_creation = st.selectbox(
     ]
 )
 
-# =========================================================
-# STYLE
-# =========================================================
-
+# Style
 st.subheader("🎨 Style")
 
 style = st.selectbox(
@@ -77,14 +50,11 @@ style = st.selectbox(
     ]
 )
 
-# =========================================================
-# PLATEFORME
-# =========================================================
-
+# Plateforme
 st.subheader("📱 Plateforme")
 
 plateforme = st.selectbox(
-    "Où vas-tu utiliser le contenu ?",
+    "Où utiliser le contenu ?",
     [
         "TikTok",
         "YouTube",
@@ -95,11 +65,8 @@ plateforme = st.selectbox(
     ]
 )
 
-# =========================================================
-# FORMAT IMAGE
-# =========================================================
-
-format_image = "Non applicable"
+# Format image
+format_image = ""
 
 if type_creation == "🖼️ Créer un prompt d'image IA":
 
@@ -111,16 +78,13 @@ if type_creation == "🖼️ Créer un prompt d'image IA":
             "1080 × 1080 — Carré",
             "1080 × 1920 — Vertical",
             "1920 × 1080 — Paysage",
-            "Format portrait",
-            "Format paysage"
+            "Portrait",
+            "Paysage"
         ]
     )
 
-# =========================================================
-# DURÉE VIDÉO
-# =========================================================
-
-duree = "Non applicable"
+# Durée vidéo
+duree = ""
 
 if type_creation == "🎬 Créer un script vidéo":
 
@@ -138,171 +102,91 @@ if type_creation == "🎬 Créer un script vidéo":
         ]
     )
 
-# =========================================================
-# DEMANDE
-# =========================================================
-
+# Demande
 st.subheader("📝 Ta demande")
 
 sujet = st.text_area(
     "Décris ce que tu veux créer",
-    placeholder=(
-        "Exemple : une affiche professionnelle pour "
-        "une formation en intelligence artificielle."
-    ),
+    placeholder="Exemple : une affiche professionnelle pour une formation en intelligence artificielle.",
     height=150
 )
 
-# =========================================================
-# BOUTON
-# =========================================================
-
+# Bouton
 creer = st.button(
     "✨ Créer avec l'IA",
     use_container_width=True
 )
 
-# =========================================================
-# TRAITEMENT
-# =========================================================
-
 if creer:
 
     if not sujet.strip():
-
-        st.warning(
-            "⚠️ Écris d'abord ce que tu veux créer."
-        )
-
+        st.warning("⚠️ Écris d'abord ta demande.")
         st.stop()
 
-    # =====================================================
-    # CONTEXTE COMMUN
-    # =====================================================
-
-    contexte = f"""
-Demande :
-{sujet}
-
-Style :
-{style}
-
-Plateforme :
-{plateforme}
-"""
-
-    # =====================================================
-    # IDÉE
-    # =====================================================
-
+    # Prompt idée
     if type_creation == "💡 Créer une idée":
 
-        prompt = f"""
-Tu es un expert en créativité, marketing digital
-et intelligence artificielle.
+        prompt = (
+            "Tu es un expert en créativité, marketing digital "
+            "et intelligence artificielle.\n\n"
+            "Demande : " + sujet + "\n\n"
+            "Style : " + style + "\n"
+            "Plateforme : " + plateforme + "\n\n"
+            "Crée une idée originale et réaliste.\n\n"
+            "Présente :\n"
+            "1. Nom de l'idée\n"
+            "2. Concept\n"
+            "3. Public cible\n"
+            "4. Comment la réaliser\n"
+            "5. Pourquoi elle est intéressante\n"
+            "6. Accroche\n"
+            "7. Appel à l'action\n\n"
+            "Réponds en français."
+        )
 
-{contexte}
-
-Crée une idée originale et réaliste.
-
-Présente :
-
-1. NOM DE L'IDÉE
-2. CONCEPT
-3. PUBLIC CIBLE
-4. COMMENT LA RÉALISER
-5. POURQUOI ELLE EST INTÉRESSANTE
-6. ACCROCHE
-7. APPEL À L'ACTION
-
-Réponds en français.
-"""
-
-    # =====================================================
-    # TEXTE
-    # =====================================================
-
+    # Prompt texte
     elif type_creation == "✍️ Créer un texte":
 
-        prompt = f"""
-Tu es un rédacteur professionnel spécialisé
-dans le marketing digital et les réseaux sociaux.
+        prompt = (
+            "Tu es un rédacteur professionnel spécialisé "
+            "dans le marketing digital et les réseaux sociaux.\n\n"
+            "Demande : " + sujet + "\n\n"
+            "Style : " + style + "\n"
+            "Plateforme : " + plateforme + "\n\n"
+            "Crée un texte professionnel et accrocheur.\n"
+            "Commence par une accroche forte.\n"
+            "Utilise des phrases faciles à comprendre.\n"
+            "Termine par un appel à l'action.\n\n"
+            "Réponds en français."
+        )
 
-{contexte}
-
-Crée un texte professionnel et accrocheur.
-
-Le texte doit :
-
-- commencer par une accroche forte ;
-- être facile à comprendre ;
-- être adapté à la plateforme ;
-- correspondre au style choisi ;
-- terminer par un appel à l'action.
-
-Réponds en français.
-"""
-
-    # =====================================================
-    # SCRIPT VIDÉO
-    # =====================================================
-
+    # Prompt vidéo
     elif type_creation == "🎬 Créer un script vidéo":
 
-        prompt = f"""
-Tu es un scénariste professionnel spécialisé
-dans TikTok, YouTube Shorts et Facebook Reels.
+        prompt = (
+            "Tu es un scénariste professionnel spécialisé "
+            "dans TikTok, YouTube Shorts et Facebook Reels.\n\n"
+            "Demande : " + sujet + "\n\n"
+            "Style : " + style + "\n"
+            "Plateforme : " + plateforme + "\n"
+            "Durée : " + duree + "\n\n"
+            "Crée un script vidéo professionnel.\n\n"
+            "Pour chaque scène indique :\n"
+            "- Numéro de scène\n"
+            "- Durée\n"
+            "- Image et action\n"
+            "- Narration ou dialogue\n"
+            "- Texte à l'écran\n"
+            "- Effet ou transition\n\n"
+            "Commence par une accroche très forte.\n"
+            "Termine par une phrase mémorable, "
+            "un appel à s'abonner et un appel à commenter.\n\n"
+            "Réponds en français."
+        )
 
-{contexte}
-
-Durée :
-{duree}
-
-Crée un script vidéo professionnel.
-
-Pour chaque scène indique :
-
-🎬 SCÈNE
-⏱️ Durée
-🎥 Image / action
-🎙️ Narration / dialogue
-📝 Texte à l'écran
-✨ Effet / transition
-
-Commence par une accroche très forte.
-
-Termine par :
-- une phrase mémorable ;
-- un appel à s'abonner ;
-- un appel à commenter.
-
-Le script doit être facile à utiliser avec CapCut
-ou un générateur vidéo IA.
-
-Réponds en français.
-"""
-
-    # =====================================================
-    # IDÉE D'AFFICHE
-    # =====================================================
-
+    # Prompt affiche
     elif type_creation == "🎨 Créer une idée d'affiche":
 
-        prompt = f"""
-Tu es un directeur artistique professionnel
-spécialisé dans la publicité et le design graphique.
-
-{contexte}
-
-Crée un concept complet d'affiche publicitaire.
-
-Présente :
-
-1. TITRE PRINCIPAL
-2. SOUS-TITRE
-3. TEXTE PUBLICITAIRE
-4. COULEURS
-5. ÉLÉMENTS VISUELS
-6. DISPOSITION
-7. ACCROCHE
-8.
+        prompt = (
+            "Tu es un directeur artistique professionnel "
+            "
