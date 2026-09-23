@@ -1,25 +1,104 @@
 import streamlit as st
 from google import genai
 
+# ==============================
+# CONFIGURATION
+# ==============================
+
 st.set_page_config(
     page_title="IA-Creator",
     page_icon="🤖",
     layout="centered"
 )
 
-st.title("🤖 IA-Creator")
-st.write("Apprends • Crée • Développe tes idées avec l'intelligence artificielle")
+# ==============================
+# DESIGN
+# ==============================
 
-# Connexion Gemini
+st.markdown(
+    """
+    <style>
+    .main {
+        background-color: #f7f8fc;
+    }
+
+    .title-box {
+        padding: 20px;
+        border-radius: 20px;
+        text-align: center;
+        background: linear-gradient(135deg, #111827, #374151);
+        color: white;
+        margin-bottom: 25px;
+    }
+
+    .title-box h1 {
+        font-size: 38px;
+        margin-bottom: 5px;
+    }
+
+    .title-box p {
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .section-title {
+        font-size: 22px;
+        font-weight: bold;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+
+    .info-box {
+        padding: 15px;
+        border-radius: 15px;
+        background-color: white;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 15px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# ==============================
+# EN-TÊTE
+# ==============================
+
+st.markdown(
+    """
+    <div class="title-box">
+        <h1>🤖 IA-Creator</h1>
+        <p>Crée des contenus professionnels avec l'intelligence artificielle</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<div class="info-box">💡 <b>Transforme une simple idée en contenu professionnel.</b></div>',
+    unsafe_allow_html=True
+)
+
+# ==============================
+# CONNEXION GEMINI
+# ==============================
+
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
     client = genai.Client(api_key=api_key)
+
 except Exception:
-    st.error("Impossible de charger la clé Gemini.")
+    st.error("❌ Impossible de charger la clé Gemini.")
     st.stop()
 
-# Outil
-st.subheader("🚀 Que veux-tu créer ?")
+# ==============================
+# OUTIL
+# ==============================
+
+st.markdown(
+    '<div class="section-title">🚀 Que veux-tu créer ?</div>',
+    unsafe_allow_html=True
+)
 
 type_creation = st.selectbox(
     "Choisis ton outil",
@@ -32,11 +111,17 @@ type_creation = st.selectbox(
     ]
 )
 
-# Style
-st.subheader("🎨 Style")
+# ==============================
+# STYLE
+# ==============================
+
+st.markdown(
+    '<div class="section-title">🎨 Choisis un style</div>',
+    unsafe_allow_html=True
+)
 
 style = st.selectbox(
-    "Choisis un style",
+    "Style",
     [
         "🔥 Viral et accrocheur",
         "💼 Professionnel",
@@ -50,8 +135,14 @@ style = st.selectbox(
     ]
 )
 
-# Plateforme
-st.subheader("📱 Plateforme")
+# ==============================
+# PLATEFORME
+# ==============================
+
+st.markdown(
+    '<div class="section-title">📱 Plateforme</div>',
+    unsafe_allow_html=True
+)
 
 plateforme = st.selectbox(
     "Où utiliser le contenu ?",
@@ -65,15 +156,21 @@ plateforme = st.selectbox(
     ]
 )
 
-# Options image
+# ==============================
+# FORMAT IMAGE
+# ==============================
+
 format_image = ""
 
 if type_creation == "🖼️ Créer un prompt d'image IA":
 
-    st.subheader("📐 Format de l'image")
+    st.markdown(
+        '<div class="section-title">📐 Format de l’image</div>',
+        unsafe_allow_html=True
+    )
 
     format_image = st.selectbox(
-        "Choisis le format",
+        "Format",
         [
             "1080 × 1080 — Carré",
             "1080 × 1920 — Vertical",
@@ -83,15 +180,21 @@ if type_creation == "🖼️ Créer un prompt d'image IA":
         ]
     )
 
-# Options vidéo
+# ==============================
+# DURÉE VIDÉO
+# ==============================
+
 duree = ""
 
 if type_creation == "🎬 Créer un script vidéo":
 
-    st.subheader("⏱️ Durée")
+    st.markdown(
+        '<div class="section-title">⏱️ Durée de la vidéo</div>',
+        unsafe_allow_html=True
+    )
 
     duree = st.selectbox(
-        "Durée de la vidéo",
+        "Durée",
         [
             "10 secondes",
             "15 secondes",
@@ -102,26 +205,45 @@ if type_creation == "🎬 Créer un script vidéo":
         ]
     )
 
-# Demande
-st.subheader("📝 Ta demande")
+# ==============================
+# DEMANDE
+# ==============================
+
+st.markdown(
+    '<div class="section-title">📝 Ta demande</div>',
+    unsafe_allow_html=True
+)
 
 sujet = st.text_area(
     "Décris ce que tu veux créer",
-    placeholder="Exemple : une affiche professionnelle pour une formation en intelligence artificielle.",
-    height=150
+    placeholder="Exemple : crée une vidéo TikTok sur 5 outils d'intelligence artificielle utiles.",
+    height=160
 )
 
-# Bouton
+# ==============================
+# BOUTON
+# ==============================
+
 creer = st.button(
-    "✨ Créer avec l'IA",
+    "✨ CRÉER AVEC L'IA",
     use_container_width=True
 )
+
+# ==============================
+# GÉNÉRATION
+# ==============================
 
 if creer:
 
     if not sujet.strip():
+
         st.warning("⚠️ Écris d'abord ta demande.")
+
         st.stop()
+
+    # ==========================
+    # IDÉE
+    # ==========================
 
     if type_creation == "💡 Créer une idée":
 
@@ -146,6 +268,10 @@ if creer:
             "Réponds en français."
         ])
 
+    # ==========================
+    # TEXTE
+    # ==========================
+
     elif type_creation == "✍️ Créer un texte":
 
         prompt = "\n".join([
@@ -157,11 +283,15 @@ if creer:
             "",
             "Crée un texte professionnel et accrocheur.",
             "Commence par une accroche forte.",
-            "Utilise des phrases faciles à comprendre.",
+            "Utilise des phrases simples.",
             "Termine par un appel à l'action.",
             "",
             "Réponds en français."
         ])
+
+    # ==========================
+    # SCRIPT VIDÉO
+    # ==========================
 
     elif type_creation == "🎬 Créer un script vidéo":
 
@@ -189,6 +319,10 @@ if creer:
             "Réponds en français."
         ])
 
+    # ==========================
+    # AFFICHE
+    # ==========================
+
     elif type_creation == "🎨 Créer une idée d'affiche":
 
         prompt = "\n".join([
@@ -213,6 +347,10 @@ if creer:
             "",
             "Réponds en français."
         ])
+
+    # ==========================
+    # PROMPT IMAGE
+    # ==========================
 
     else:
 
@@ -251,10 +389,13 @@ if creer:
             "Réponds en français."
         ])
 
-    # Appel Gemini
+    # ==========================
+    # GEMINI
+    # ==========================
+
     try:
 
-        with st.spinner("🤖 IA-Creator prépare ta création..."):
+        with st.spinner("🤖 IA-Creator travaille..."):
 
             response = client.models.generate_content(
                 model="gemini-3.5-flash-lite",
@@ -267,13 +408,20 @@ if creer:
 
             st.success("✅ Création terminée !")
 
-            st.subheader("✨ Ton résultat")
+            st.markdown(
+                '<div class="section-title">✨ Ton résultat</div>',
+                unsafe_allow_html=True
+            )
 
             st.text_area(
                 "Résultat",
                 value=resultat,
                 height=550
             )
+
+            # ======================
+            # TÉLÉCHARGEMENT
+            # ======================
 
             st.download_button(
                 label="📥 Télécharger le résultat",
@@ -290,4 +438,5 @@ if creer:
     except Exception as e:
 
         st.error("❌ Gemini n'a pas pu générer la réponse.")
+
         st.write(str(e))
