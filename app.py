@@ -1,27 +1,18 @@
 import streamlit as st
 from google import genai
 
-# --------------------------------------------------
-# CONFIGURATION
-# --------------------------------------------------
-
+# Configuration
 st.set_page_config(
     page_title="IA-Creator",
     page_icon="🤖",
     layout="centered"
 )
 
-# --------------------------------------------------
-# TITRE
-# --------------------------------------------------
-
+# Titre
 st.title("🤖 IA-Creator")
 st.write("Bienvenue dans ton espace de création avec l'intelligence artificielle.")
 
-# --------------------------------------------------
-# CONNEXION À GEMINI
-# --------------------------------------------------
-
+# Connexion à Gemini
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
 
@@ -29,14 +20,12 @@ try:
         api_key=api_key
     )
 
-except Exception as e:
+except Exception:
     st.error("❌ Impossible de charger la clé Gemini.")
     st.stop()
 
-# --------------------------------------------------
-# CHOIX DU TYPE DE CRÉATION
-# --------------------------------------------------
 
+# Choix de la création
 type_creation = st.selectbox(
     "Que veux-tu créer ?",
     [
@@ -47,44 +36,37 @@ type_creation = st.selectbox(
     ]
 )
 
-# --------------------------------------------------
-# SUJET
-# --------------------------------------------------
 
+# Sujet
 sujet = st.text_area(
     "Décris ce que tu veux créer :",
-    placeholder="Exemple : une vidéo TikTok sur les avantages de l'intelligence artificielle..."
+    placeholder="Exemple : une vidéo TikTok sur l'intelligence artificielle..."
 )
 
-# --------------------------------------------------
-# BOUTON
-# --------------------------------------------------
 
+# Bouton
 if st.button("✨ Créer", use_container_width=True):
 
     if not sujet.strip():
         st.warning("⚠️ Écris d'abord ce que tu veux créer.")
         st.stop()
 
-    # --------------------------------------------------
-    # PROMPTS
-    # --------------------------------------------------
-
+    # Création du prompt
     if type_creation == "Créer une idée":
 
         prompt = f"""
-Tu es un expert en créativité, marketing digital et intelligence artificielle.
+Tu es un expert en créativité et en intelligence artificielle.
 
-L'utilisateur veut créer une idée à partir de ce sujet :
-
+Sujet :
 {sujet}
 
-Donne une idée originale, simple, intéressante et exploitable.
-Explique :
+Donne une idée originale et facile à réaliser.
+
+Présente :
 1. L'idée
-2. Pourquoi elle peut intéresser les gens
+2. Pourquoi elle est intéressante
 3. Comment la réaliser
-4. Une phrase accrocheuse pour commencer
+4. Une accroche puissante
 
 Réponds en français.
 """
@@ -92,51 +74,47 @@ Réponds en français.
     elif type_creation == "Créer un texte":
 
         prompt = f"""
-Tu es un excellent rédacteur spécialisé dans les réseaux sociaux.
+Tu es un rédacteur professionnel spécialisé dans les réseaux sociaux.
 
-Écris un texte professionnel et naturel à partir de ce sujet :
-
+Sujet :
 {sujet}
 
-Le texte doit être clair, accrocheur et facile à comprendre.
-Il doit être adapté aux réseaux sociaux.
+Écris un texte professionnel, naturel,
+accrocheur et facile à comprendre.
 
-Réponds uniquement en français.
+Réponds en français.
 """
 
     elif type_creation == "Créer un script vidéo":
 
         prompt = f"""
-Tu es un scénariste professionnel spécialisé dans les vidéos TikTok,
-YouTube Shorts, Facebook Reels et contenus viraux.
+Tu es un scénariste professionnel spécialisé
+dans TikTok, YouTube Shorts et Facebook Reels.
 
-Crée un script vidéo professionnel à partir de ce sujet :
-
+Sujet :
 {sujet}
 
-Structure le script ainsi :
+Crée un script vidéo professionnel.
 
 SCÈNE 1
-- Image / action :
-- Dialogue / narration :
-- Texte à l'écran :
+Image / action :
+Dialogue / narration :
+Texte à l'écran :
 
 SCÈNE 2
-- Image / action :
-- Dialogue / narration :
-- Texte à l'écran :
+Image / action :
+Dialogue / narration :
+Texte à l'écran :
 
 SCÈNE 3
-- Image / action :
-- Dialogue / narration :
-- Texte à l'écran :
+Image / action :
+Dialogue / narration :
+Texte à l'écran :
 
-TERMINE PAR :
-- Une phrase forte
-- Un appel à s'abonner
-- Un appel à commenter
-
-Le script doit être dynamique et facile à transformer en vidéo.
+Termine avec :
+- une phrase forte
+- un appel à s'abonner
+- un appel à commenter
 
 Réponds en français.
 """
@@ -144,52 +122,50 @@ Réponds en français.
     else:
 
         prompt = f"""
-Tu es un expert en publicité, design graphique et marketing.
+Tu es un expert en publicité et en design graphique.
 
-Propose une idée d'affiche publicitaire professionnelle à partir de ce sujet :
-
+Sujet :
 {sujet}
 
+Propose une idée d'affiche publicitaire professionnelle.
+
 Donne :
-
-1. Le titre principal
+1. Le titre
 2. Le sous-titre
-3. Les éléments visuels à utiliser
-4. Les couleurs recommandées
-5. La disposition des éléments
-6. Le texte publicitaire
-7. Un appel à l'action
-
-L'affiche doit être moderne, professionnelle et adaptée aux réseaux sociaux.
+3. Le texte publicitaire
+4. Les couleurs
+5. Les éléments visuels
+6. La disposition
+7. L'appel à l'action
 
 Réponds en français.
 """
 
-    # --------------------------------------------------
-    # APPEL GEMINI
-    # --------------------------------------------------
 
-    with st.spinner("IA-Creator prépare ta réponse..."):
+    # Appel Gemini
+    try:
 
-        try:
+        with st.spinner("IA-Creator prépare ta réponse..."):
 
             response = client.models.generate_content(
-                model="gemini-3.8-flash",
+                model="gemini-3.5-flash-lite",
                 contents=prompt
             )
 
-            if response.text:
-                st.success("✅ Création terminée !")
+        if response.text:
 
-                st.markdown("### ✨ Résultat")
+            st.success("✅ Création terminée !")
 
-                st.write(response.text)
+            st.markdown("### ✨ Résultat")
 
-            else:
-                st.warning("⚠️ Gemini n'a retourné aucun texte.")
+            st.write(response.text)
 
-        except Exception as e:
+        else:
 
-            st.error("❌ Gemini n'a pas pu générer la réponse.")
+            st.warning("⚠️ Gemini n'a retourné aucun texte.")
 
-            st.code(str(e))
+    except Exception as e:
+
+        st.error("❌ Gemini n'a pas pu générer la réponse.")
+
+        st.write(str(e))
