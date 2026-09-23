@@ -1,4 +1,3 @@
-
 import streamlit as st
 from google import genai
 
@@ -50,7 +49,7 @@ Réponds en français, de manière claire, professionnelle et utile.
 
             with st.spinner("IA-Creator prépare ta réponse..."):
                 response = client.models.generate_content(
-                    model="gemini-2.5-flash",
+                    model="gemini-3.6-flash",
                     contents=prompt
                 )
 
