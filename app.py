@@ -413,10 +413,13 @@ if creer:
                 unsafe_allow_html=True
             )
 
-            st.text_area(
-                "Résultat",
-                value=resultat,
-                height=550
+            st.text_area(st.text_area(
+    "Résultat",
+    value=resultat,
+    height=550
+)
+
+st.code(resultat, language="text")
             )
 
             # ======================
