@@ -1,11 +1,15 @@
 import streamlit as st
 from google import genai
 
-st.set_page_config(page_title="IA-Creator", page_icon="🤖")
+st.set_page_config(
+    page_title="IA-Creator",
+    page_icon="🤖"
+)
 
 st.title("🤖 IA-Creator")
 st.write("Crée avec l'intelligence artificielle")
 
+# Connexion Gemini
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
     client = genai.Client(api_key=api_key)
@@ -13,6 +17,7 @@ except Exception:
     st.error("Erreur avec la clé Gemini.")
     st.stop()
 
+# Outil
 outil = st.selectbox(
     "🚀 Que veux-tu créer ?",
     [
@@ -24,6 +29,7 @@ outil = st.selectbox(
     ]
 )
 
+# Style
 style = st.selectbox(
     "🎨 Style",
     [
@@ -39,6 +45,7 @@ style = st.selectbox(
     ]
 )
 
+# Plateforme
 plateforme = st.selectbox(
     "📱 Plateforme",
     [
@@ -51,9 +58,11 @@ plateforme = st.selectbox(
     ]
 )
 
+# Format image
 format_image = ""
 
 if outil == "Créer un prompt d'image IA":
+
     format_image = st.selectbox(
         "📐 Format",
         [
@@ -63,9 +72,11 @@ if outil == "Créer un prompt d'image IA":
         ]
     )
 
+# Durée vidéo
 duree = ""
 
 if outil == "Créer un script vidéo":
+
     duree = st.selectbox(
         "⏱️ Durée",
         [
@@ -76,17 +87,24 @@ if outil == "Créer un script vidéo":
         ]
     )
 
+# Demande
 sujet = st.text_area(
     "📝 Ta demande",
     height=150
 )
 
-if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
+# Bouton
+if st.button(
+    "✨ CRÉER AVEC L'IA",
+    use_container_width=True
+):
 
     if not sujet.strip():
+
         st.warning("Écris d'abord ta demande.")
         st.stop()
 
+    # Prompt envoyé à Gemini
     prompt = (
         "Tu es un expert professionnel en intelligence artificielle, "
         "marketing digital et création de contenu.\n\n"
@@ -100,6 +118,7 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
         "Réponds en français."
     )
 
+    # Génération Gemini
     try:
 
         with st.spinner("IA-Creator travaille..."):
@@ -117,16 +136,22 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
 
             st.subheader("✨ Ton résultat")
 
+            # Résultat
             st.text_area(
                 "Résultat",
                 resultat,
                 height=500
             )
 
-            st.code(resultat)
+            # Zone de copie
+            st.code(
+                resultat,
+                language="text"
+            )
 
+            # Téléchargement
             st.download_button(
-                "Télécharger le résultat",
+                "📥 Télécharger le résultat",
                 resultat,
                 "IA-Creator-resultat.txt",
                 "text/plain",
@@ -135,7 +160,9 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
 
         else:
 
-            st.warning("Gemini n'a retourné aucun résultat.")
+            st.warning(
+                "Gemini n'a retourné aucun résultat."
+            )
 
     except Exception as e:
 
