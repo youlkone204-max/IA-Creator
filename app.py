@@ -1,3 +1,4 @@
+import time
 import streamlit as st
 from google import genai
 
@@ -47,14 +48,27 @@ Demande de l'utilisateur :
 Réponds en français, de manière claire, professionnelle et utile.
 """
 
-            with st.spinner("IA-Creator prépare ta réponse..."):
-                response = client.models.generate_content(
-                    model="gemini-3.6-flash",
-                    contents=prompt
-                )
+            response = None
 
-            st.success("Création terminée !")
-            st.write(response.text)
+            with st.spinner("IA-Creator prépare ta réponse..."):
+                for tentative in range(3):
+                    try:
+                        response = client.models.generate_content(
+                            model="gemini-3.6-flash",
+                            contents=prompt
+                        )
+                        break
+                    except Exception as erreur:
+                        if "503" in str(erreur) and tentative < 2:
+                            time.sleep(5)
+                        else:
+                            raise erreur
+
+            if response and response.text:
+                st.success("Création terminée !")
+                st.write(response.text)
+            else:
+                st.warning("Gemini n'a pas retourné de réponse.")
 
         except Exception as e:
             st.error("Une erreur est survenue.")
