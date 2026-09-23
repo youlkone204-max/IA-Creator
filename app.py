@@ -1,5 +1,6 @@
+
 import streamlit as st
-from openai import OpenAI
+from google import genai
 
 st.set_page_config(
     page_title="IA-Creator",
@@ -32,7 +33,9 @@ if st.button("Créer"):
         st.warning("Écris d'abord une description.")
     else:
         try:
-            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+            client = genai.Client(
+                api_key=st.secrets["GEMINI_API_KEY"]
+            )
 
             prompt = f"""
 Tu es l'assistant IA de l'application IA-Creator.
@@ -46,13 +49,13 @@ Réponds en français, de manière claire, professionnelle et utile.
 """
 
             with st.spinner("IA-Creator prépare ta réponse..."):
-                response = client.responses.create(
-                    model="gpt-5.6-luna",
-                    input=prompt
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt
                 )
 
             st.success("Création terminée !")
-            st.write(response.output_text)
+            st.write(response.text)
 
         except Exception as e:
             st.error("Une erreur est survenue.")
