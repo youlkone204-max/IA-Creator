@@ -18,7 +18,7 @@ except Exception:
     st.error("Impossible de charger la clé Gemini.")
     st.stop()
 
-# Type de création
+# Outil
 st.subheader("🚀 Que veux-tu créer ?")
 
 type_creation = st.selectbox(
@@ -65,7 +65,7 @@ plateforme = st.selectbox(
     ]
 )
 
-# Format image
+# Options image
 format_image = ""
 
 if type_creation == "🖼️ Créer un prompt d'image IA":
@@ -83,7 +83,7 @@ if type_creation == "🖼️ Créer un prompt d'image IA":
         ]
     )
 
-# Durée vidéo
+# Options vidéo
 duree = ""
 
 if type_creation == "🎬 Créer un script vidéo":
@@ -123,70 +123,171 @@ if creer:
         st.warning("⚠️ Écris d'abord ta demande.")
         st.stop()
 
-    # Prompt idée
     if type_creation == "💡 Créer une idée":
 
-        prompt = (
-            "Tu es un expert en créativité, marketing digital "
-            "et intelligence artificielle.\n\n"
-            "Demande : " + sujet + "\n\n"
-            "Style : " + style + "\n"
-            "Plateforme : " + plateforme + "\n\n"
-            "Crée une idée originale et réaliste.\n\n"
-            "Présente :\n"
-            "1. Nom de l'idée\n"
-            "2. Concept\n"
-            "3. Public cible\n"
-            "4. Comment la réaliser\n"
-            "5. Pourquoi elle est intéressante\n"
-            "6. Accroche\n"
-            "7. Appel à l'action\n\n"
+        prompt = "\n".join([
+            "Tu es un expert en créativité, marketing digital et intelligence artificielle.",
+            "",
+            "Demande : " + sujet,
+            "Style : " + style,
+            "Plateforme : " + plateforme,
+            "",
+            "Crée une idée originale et réaliste.",
+            "",
+            "Présente :",
+            "1. Nom de l'idée",
+            "2. Concept",
+            "3. Public cible",
+            "4. Comment la réaliser",
+            "5. Pourquoi elle est intéressante",
+            "6. Accroche",
+            "7. Appel à l'action",
+            "",
             "Réponds en français."
-        )
+        ])
 
-    # Prompt texte
     elif type_creation == "✍️ Créer un texte":
 
-        prompt = (
-            "Tu es un rédacteur professionnel spécialisé "
-            "dans le marketing digital et les réseaux sociaux.\n\n"
-            "Demande : " + sujet + "\n\n"
-            "Style : " + style + "\n"
-            "Plateforme : " + plateforme + "\n\n"
-            "Crée un texte professionnel et accrocheur.\n"
-            "Commence par une accroche forte.\n"
-            "Utilise des phrases faciles à comprendre.\n"
-            "Termine par un appel à l'action.\n\n"
+        prompt = "\n".join([
+            "Tu es un rédacteur professionnel spécialisé dans le marketing digital et les réseaux sociaux.",
+            "",
+            "Demande : " + sujet,
+            "Style : " + style,
+            "Plateforme : " + plateforme,
+            "",
+            "Crée un texte professionnel et accrocheur.",
+            "Commence par une accroche forte.",
+            "Utilise des phrases faciles à comprendre.",
+            "Termine par un appel à l'action.",
+            "",
             "Réponds en français."
-        )
+        ])
 
-    # Prompt vidéo
     elif type_creation == "🎬 Créer un script vidéo":
 
-        prompt = (
-            "Tu es un scénariste professionnel spécialisé "
-            "dans TikTok, YouTube Shorts et Facebook Reels.\n\n"
-            "Demande : " + sujet + "\n\n"
-            "Style : " + style + "\n"
-            "Plateforme : " + plateforme + "\n"
-            "Durée : " + duree + "\n\n"
-            "Crée un script vidéo professionnel.\n\n"
-            "Pour chaque scène indique :\n"
-            "- Numéro de scène\n"
-            "- Durée\n"
-            "- Image et action\n"
-            "- Narration ou dialogue\n"
-            "- Texte à l'écran\n"
-            "- Effet ou transition\n\n"
-            "Commence par une accroche très forte.\n"
-            "Termine par une phrase mémorable, "
-            "un appel à s'abonner et un appel à commenter.\n\n"
+        prompt = "\n".join([
+            "Tu es un scénariste professionnel spécialisé dans TikTok, YouTube Shorts et Facebook Reels.",
+            "",
+            "Demande : " + sujet,
+            "Style : " + style,
+            "Plateforme : " + plateforme,
+            "Durée : " + duree,
+            "",
+            "Crée un script vidéo professionnel.",
+            "",
+            "Pour chaque scène indique :",
+            "- Numéro de scène",
+            "- Durée",
+            "- Image et action",
+            "- Narration ou dialogue",
+            "- Texte à l'écran",
+            "- Effet ou transition",
+            "",
+            "Commence par une accroche très forte.",
+            "Termine par un appel à s'abonner et à commenter.",
+            "",
             "Réponds en français."
-        )
+        ])
 
-    # Prompt affiche
     elif type_creation == "🎨 Créer une idée d'affiche":
 
-        prompt = (
-            "Tu es un directeur artistique professionnel "
-            "
+        prompt = "\n".join([
+            "Tu es un directeur artistique professionnel spécialisé dans la publicité et le design graphique.",
+            "",
+            "Demande : " + sujet,
+            "Style : " + style,
+            "Plateforme : " + plateforme,
+            "",
+            "Crée un concept complet d'affiche publicitaire.",
+            "",
+            "Présente :",
+            "1. Titre principal",
+            "2. Sous-titre",
+            "3. Texte publicitaire",
+            "4. Couleurs",
+            "5. Éléments visuels",
+            "6. Disposition",
+            "7. Accroche",
+            "8. Appel à l'action",
+            "9. Prompt pour générer l'affiche avec une IA",
+            "",
+            "Réponds en français."
+        ])
+
+    else:
+
+        prompt = "\n".join([
+            "Tu es un expert professionnel en prompt engineering pour la génération d'images avec l'intelligence artificielle.",
+            "",
+            "Demande : " + sujet,
+            "Style : " + style,
+            "Plateforme : " + plateforme,
+            "Format : " + format_image,
+            "",
+            "Crée un prompt d'image très détaillé et professionnel.",
+            "",
+            "Le prompt doit préciser :",
+            "1. Sujet principal",
+            "2. Personnages ou objets",
+            "3. Apparence",
+            "4. Vêtements si nécessaire",
+            "5. Environnement",
+            "6. Arrière-plan",
+            "7. Éclairage",
+            "8. Composition",
+            "9. Angle de caméra",
+            "10. Profondeur de champ",
+            "11. Style visuel",
+            "12. Niveau de détail",
+            "13. Qualité visuelle",
+            "14. Format",
+            "",
+            "Crée deux parties :",
+            "",
+            "PROMPT FINAL",
+            "",
+            "PROMPT NÉGATIF",
+            "",
+            "Réponds en français."
+        ])
+
+    # Appel Gemini
+    try:
+
+        with st.spinner("🤖 IA-Creator prépare ta création..."):
+
+            response = client.models.generate_content(
+                model="gemini-3.5-flash-lite",
+                contents=prompt
+            )
+
+        if response.text:
+
+            resultat = response.text
+
+            st.success("✅ Création terminée !")
+
+            st.subheader("✨ Ton résultat")
+
+            st.text_area(
+                "Résultat",
+                value=resultat,
+                height=550
+            )
+
+            st.download_button(
+                label="📥 Télécharger le résultat",
+                data=resultat,
+                file_name="IA-Creator-resultat.txt",
+                mime="text/plain",
+                use_container_width=True
+            )
+
+        else:
+
+            st.warning("⚠️ Gemini n'a retourné aucun résultat.")
+
+    except Exception as e:
+
+        st.error("❌ Gemini n'a pas pu générer la réponse.")
+        st.write(str(e))
