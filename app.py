@@ -101,130 +101,193 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
         st.warning("⚠️ Écris d'abord ta demande.")
         st.stop()
 
-    # SCRIPT VIDÉO
-    if outil == "Créer un script vidéo":
+    # ==============================
+    # CRÉER UNE IDÉE
+    # ==============================
 
-        prompt = f"""
-Tu es un scénariste professionnel spécialisé dans TikTok,
-YouTube Shorts et Facebook Reels.
+    if outil == "Créer une idée":
 
-Crée un script vidéo professionnel et dynamique.
+        prompt = (
+            "Tu es un expert en création de contenu.\n\n"
+            "Crée une idée originale à partir de cette demande :\n"
+            + sujet
+            + "\n\nPlateforme : "
+            + plateforme
+            + "\nStyle : "
+            + style
+            + "\n\nDonne :\n"
+            "1. Titre\n"
+            "2. Concept\n"
+            "3. Accroche\n"
+            "4. Déroulement\n"
+            "5. Appel à l'action\n"
+            "6. Hashtags\n\n"
+            "Réponds en français."
+        )
 
-Sujet : {sujet}
-Plateforme : {plateforme}
-Style : {style}
-Durée : {duree}
+    # ==============================
+    # CRÉER UN TEXTE
+    # ==============================
 
-Le script doit être directement utilisable avec CapCut.
-
-Commence par une accroche très forte.
-
-Organise le script scène par scène.
-
-Pour chaque scène indique :
-
-SCÈNE
-Durée :
-Ce que l'on voit à l'écran :
-Narration ou dialogue :
-Texte à l'écran :
-Effet ou transition :
-Ambiance sonore :
-
-Respecte la durée totale demandée.
-
-Termine par un appel à l'action naturel invitant
-les spectateurs à s'abonner, aimer la vidéo et commenter.
-
-Ajoute également :
-
-TITRE DE LA VIDÉO
-
-LÉGENDE
-
-HASHTAGS
-
-Réponds uniquement en français.
-"""
-
-    # IDÉE
-    elif outil == "Créer une idée":
-
-        prompt = f"""
-Tu es un expert en création de contenu.
-
-Crée une idée originale à partir de cette demande :
-
-{sujet}
-
-Plateforme : {plateforme}
-Style : {style}
-
-Donne :
-
-1. Titre
-2. Concept
-3. Accroche
-4. Déroulement
-5. Appel à l'action
-6. Hashtags
-
-Réponds en français.
-"""
-
-    # TEXTE
     elif outil == "Créer un texte":
 
-        prompt = f"""
-Tu es un rédacteur professionnel spécialisé dans
-les réseaux sociaux.
+        prompt = (
+            "Tu es un rédacteur professionnel spécialisé "
+            "dans les réseaux sociaux.\n\n"
+            "Crée un texte à partir de cette demande :\n"
+            + sujet
+            + "\n\nPlateforme : "
+            + plateforme
+            + "\nStyle : "
+            + style
+            + "\n\n"
+            "Le texte doit être naturel, clair et accrocheur.\n"
+            "Termine par un appel à l'action.\n"
+            "Ajoute des hashtags pertinents.\n\n"
+            "Réponds en français."
+        )
 
-Crée un texte à partir de cette demande :
+    # ==============================
+    # SCRIPT VIDÉO
+    # ==============================
 
-{sujet}
+    elif outil == "Créer un script vidéo":
 
-Plateforme : {plateforme}
-Style : {style}
+        prompt = (
+            "Tu es un scénariste professionnel spécialisé "
+            "dans TikTok, YouTube Shorts et Facebook Reels.\n\n"
+            "Crée un script vidéo professionnel et dynamique.\n\n"
+            "SUJET : "
+            + sujet
+            + "\nPLATEFORME : "
+            + plateforme
+            + "\nSTYLE : "
+            + style
+            + "\nDURÉE : "
+            + duree
+            + "\n\n"
+            "Le script doit être directement utilisable avec CapCut.\n\n"
+            "Commence par une accroche très forte.\n"
+            "Respecte la durée demandée.\n"
+            "Utilise des phrases courtes et dynamiques.\n\n"
+            "Pour chaque scène indique exactement :\n\n"
+            "SCÈNE 1\n"
+            "Durée :\n"
+            "Ce que l'on voit à l'écran :\n"
+            "Narration ou dialogue :\n"
+            "Texte à l'écran :\n"
+            "Effet ou transition :\n"
+            "Ambiance sonore :\n\n"
+            "Continue avec les scènes suivantes "
+            "jusqu'à couvrir toute la durée.\n\n"
+            "À la fin ajoute :\n"
+            "TITRE DE LA VIDÉO\n"
+            "LÉGENDE\n"
+            "HASHTAGS\n"
+            "APPEL À L'ACTION\n\n"
+            "L'appel à l'action doit encourager les spectateurs "
+            "à s'abonner, aimer la vidéo et commenter.\n\n"
+            "Réponds uniquement en français."
+        )
 
-Le texte doit être naturel, clair et accrocheur.
+    # ==============================
+    # IDÉE D'AFFICHE
+    # ==============================
 
-Termine par un appel à l'action.
-
-Ajoute des hashtags pertinents.
-
-Réponds en français.
-"""
-
-    # AFFICHE
     elif outil == "Créer une idée d'affiche":
 
-        prompt = f"""
-Tu es un directeur artistique professionnel.
+        prompt = (
+            "Tu es un directeur artistique professionnel.\n\n"
+            "Crée une idée d'affiche professionnelle.\n\n"
+            "Sujet : "
+            + sujet
+            + "\nPlateforme : "
+            + plateforme
+            + "\nStyle : "
+            + style
+            + "\n\n"
+            "Donne :\n"
+            "1. Concept visuel\n"
+            "2. Sujet principal\n"
+            "3. Arrière-plan\n"
+            "4. Éclairage\n"
+            "5. Couleurs\n"
+            "6. Texte principal\n"
+            "7. Texte secondaire\n"
+            "8. Composition\n"
+            "9. Éléments graphiques\n"
+            "10. Appel à l'action\n\n"
+            "Réponds en français."
+        )
 
-Crée une idée d'affiche professionnelle.
+    # ==============================
+    # PROMPT IMAGE IA
+    # ==============================
 
-Sujet : {sujet}
-Plateforme : {plateforme}
-Style : {style}
-
-Donne :
-
-1. Concept visuel
-2. Sujet principal
-3. Arrière-plan
-4. Éclairage
-5. Couleurs
-6. Texte principal
-7. Texte secondaire
-8. Composition
-9. Éléments graphiques
-10. Appel à l'action
-
-Réponds en français.
-"""
-
-    # PROMPT IMAGE
     else:
 
-        prompt = f"""
-Tu es un expert en création de
+        prompt = (
+            "Tu es un expert professionnel en création "
+            "de prompts pour générateurs d'images IA.\n\n"
+            "Crée un prompt d'image détaillé et professionnel.\n\n"
+            "Sujet : "
+            + sujet
+            + "\nStyle : "
+            + style
+            + "\nFormat : "
+            + format_image
+            + "\nPlateforme : "
+            + plateforme
+            + "\n\n"
+            "Décris :\n"
+            "- sujet principal\n"
+            "- apparence\n"
+            "- vêtements\n"
+            "- posture\n"
+            "- expression\n"
+            "- environnement\n"
+            "- arrière-plan\n"
+            "- éclairage\n"
+            "- couleurs\n"
+            "- composition\n"
+            "- profondeur de champ\n"
+            "- ambiance\n"
+            "- détails visuels\n"
+            "- qualité\n\n"
+            "Donne uniquement le prompt final prêt à copier.\n"
+            "Réponds en français."
+        )
+
+    # ==============================
+    # GEMINI
+    # ==============================
+
+    try:
+
+        with st.spinner("🤖 Gemini est en train de créer..."):
+
+            response = client.models.generate_content(
+                model="gemini-3.5-flash-lite",
+                contents=prompt
+            )
+
+        resultat = response.text
+
+        st.success("✅ Création terminée !")
+
+        st.markdown("## ✨ Ton résultat")
+
+        st.write(resultat)
+
+        st.download_button(
+            label="📥 Télécharger le résultat",
+            data=resultat,
+            file_name="ia_creator_resultat.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
+
+    except Exception as e:
+
+        st.error("❌ Une erreur est survenue pendant la génération.")
+        st.code(str(e))
