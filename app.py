@@ -8,8 +8,16 @@ st.set_page_config(
     layout="centered"
 )
 
+# ==============================
+# CONFIGURATION
+# ==============================
+
 st.title("🤖 IA-Creator")
 st.write("Crée avec l'intelligence artificielle")
+
+# ==============================
+# CONNEXION GEMINI
+# ==============================
 
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
@@ -18,6 +26,17 @@ except Exception:
     st.error("❌ Impossible de connecter Gemini.")
     st.info("Vérifie le secret GEMINI_API_KEY dans Streamlit.")
     st.stop()
+
+# ==============================
+# HISTORIQUE
+# ==============================
+
+if "historique" not in st.session_state:
+    st.session_state.historique = []
+
+# ==============================
+# CHOIX DE L'OUTIL
+# ==============================
 
 outil = st.selectbox(
     "🚀 Que veux-tu créer ?",
@@ -60,6 +79,7 @@ plateforme = st.selectbox(
 format_image = ""
 
 if outil == "Créer un prompt d'image IA":
+
     format_image = st.selectbox(
         "📐 Format",
         [
@@ -72,6 +92,7 @@ if outil == "Créer un prompt d'image IA":
 duree = ""
 
 if outil == "Créer un script vidéo":
+
     duree = st.selectbox(
         "⏱️ Durée",
         [
@@ -88,11 +109,20 @@ sujet = st.text_area(
     placeholder="Exemple : crée une vidéo sur l'intelligence artificielle"
 )
 
+# ==============================
+# BOUTON DE CRÉATION
+# ==============================
+
 if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
 
     if not sujet.strip():
+
         st.warning("⚠️ Écris d'abord ta demande.")
         st.stop()
+
+    # ==========================
+    # PROMPT : IDÉE
+    # ==========================
 
     if outil == "Créer une idée":
 
@@ -104,7 +134,8 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
             + plateforme
             + "\nStyle : "
             + style
-            + "\n\nDonne :\n"
+            + "\n\n"
+            "Donne :\n"
             "1. Titre\n"
             "2. Concept\n"
             "3. Accroche\n"
@@ -113,6 +144,10 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
             "6. Hashtags\n\n"
             "Réponds en français."
         )
+
+    # ==========================
+    # PROMPT : TEXTE
+    # ==========================
 
     elif outil == "Créer un texte":
 
@@ -131,6 +166,10 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
             "Ajoute des hashtags pertinents.\n\n"
             "Réponds en français."
         )
+
+    # ==========================
+    # PROMPT : SCRIPT VIDÉO
+    # ==========================
 
     elif outil == "Créer un script vidéo":
 
@@ -171,6 +210,10 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
             "Réponds uniquement en français."
         )
 
+    # ==========================
+    # PROMPT : AFFICHE
+    # ==========================
+
     elif outil == "Créer une idée d'affiche":
 
         prompt = (
@@ -196,6 +239,10 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
             "10. Appel à l'action\n\n"
             "Réponds en français."
         )
+
+    # ==========================
+    # PROMPT : IMAGE IA
+    # ==========================
 
     else:
 
@@ -231,6 +278,10 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
             "Réponds en français."
         )
 
+    # ==============================
+    # GÉNÉRATION
+    # ==============================
+
     try:
 
         with st.spinner("🤖 Gemini est en train de créer..."):
@@ -242,6 +293,21 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
 
         resultat = response.text
 
+        # ==========================
+        # ENREGISTRER DANS L'HISTORIQUE
+        # ==========================
+
+        st.session_state.historique.insert(
+            0,
+            {
+                "outil": outil,
+                "sujet": sujet,
+                "style": style,
+                "plateforme": plateforme,
+                "resultat": resultat
+            }
+        )
+
         st.success("✅ Création terminée !")
 
         st.markdown("## ✨ Ton résultat")
@@ -252,6 +318,10 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
             height=350,
             key="resultat_ia"
         )
+
+        # ==========================
+        # BOUTON COPIER
+        # ==========================
 
         resultat_js = (
             resultat
@@ -281,18 +351,27 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
 
             <script>
             function copierResultat() {
+
                 const texte = `""" + resultat_js + """`;
 
                 navigator.clipboard.writeText(texte).then(function() {
+
                     alert("✅ Résultat copié !");
+
                 }).catch(function() {
+
                     alert("❌ Impossible de copier automatiquement.");
+
                 });
             }
             </script>
             """,
             height=65
         )
+
+        # ==========================
+        # TÉLÉCHARGEMENT
+        # ==========================
 
         st.download_button(
             label="📥 Télécharger le résultat",
@@ -306,3 +385,54 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
 
         st.error("❌ Une erreur est survenue pendant la génération.")
         st.code(str(e))
+
+
+# ==========================================
+# HISTORIQUE
+# ==========================================
+
+st.markdown("---")
+st.markdown("## 🗂️ Historique")
+
+if len(st.session_state.historique) == 0:
+
+    st.info("Aucune création dans l'historique pour le moment.")
+
+else:
+
+    st.write(
+        "Tes dernières créations sont disponibles ci-dessous."
+    )
+
+    for i, item in enumerate(st.session_state.historique):
+
+        with st.expander(
+            "📝 "
+            + item["outil"]
+            + " — "
+            + item["sujet"][:50]
+        ):
+
+            st.write("**Plateforme :**", item["plateforme"])
+            st.write("**Style :**", item["style"])
+
+            st.text_area(
+                "Résultat",
+                value=item["resultat"],
+                height=250,
+                key="historique_" + str(i)
+            )
+
+            st.download_button(
+                "📥 Télécharger",
+                data=item["resultat"],
+                file_name="ia_creator_historique_" + str(i + 1) + ".txt",
+                mime="text/plain",
+                key="download_" + str(i)
+            )
+
+    if st.button("🗑️ Effacer l'historique"):
+
+        st.session_state.historique = []
+
+        st.rerun()
