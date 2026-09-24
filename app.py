@@ -10,7 +10,6 @@ st.set_page_config(
 st.title("🤖 IA-Creator")
 st.write("Crée avec l'intelligence artificielle")
 
-# Connexion Gemini
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
     client = genai.Client(api_key=api_key)
@@ -19,7 +18,6 @@ except Exception:
     st.info("Vérifie le secret GEMINI_API_KEY dans Streamlit.")
     st.stop()
 
-# Outil
 outil = st.selectbox(
     "🚀 Que veux-tu créer ?",
     [
@@ -31,7 +29,6 @@ outil = st.selectbox(
     ]
 )
 
-# Style
 style = st.selectbox(
     "🎨 Style",
     [
@@ -47,7 +44,6 @@ style = st.selectbox(
     ]
 )
 
-# Plateforme
 plateforme = st.selectbox(
     "📱 Plateforme",
     [
@@ -60,7 +56,6 @@ plateforme = st.selectbox(
     ]
 )
 
-# Format image
 format_image = ""
 
 if outil == "Créer un prompt d'image IA":
@@ -73,7 +68,6 @@ if outil == "Créer un prompt d'image IA":
         ]
     )
 
-# Durée vidéo
 duree = ""
 
 if outil == "Créer un script vidéo":
@@ -87,23 +81,17 @@ if outil == "Créer un script vidéo":
         ]
     )
 
-# Demande
 sujet = st.text_area(
     "📝 Ta demande",
     height=150,
     placeholder="Exemple : crée une vidéo sur l'intelligence artificielle"
 )
 
-# Bouton
 if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
 
     if not sujet.strip():
         st.warning("⚠️ Écris d'abord ta demande.")
         st.stop()
-
-    # ==============================
-    # CRÉER UNE IDÉE
-    # ==============================
 
     if outil == "Créer une idée":
 
@@ -125,10 +113,6 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
             "Réponds en français."
         )
 
-    # ==============================
-    # CRÉER UN TEXTE
-    # ==============================
-
     elif outil == "Créer un texte":
 
         prompt = (
@@ -146,10 +130,6 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
             "Ajoute des hashtags pertinents.\n\n"
             "Réponds en français."
         )
-
-    # ==============================
-    # SCRIPT VIDÉO
-    # ==============================
 
     elif outil == "Créer un script vidéo":
 
@@ -190,10 +170,6 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
             "Réponds uniquement en français."
         )
 
-    # ==============================
-    # IDÉE D'AFFICHE
-    # ==============================
-
     elif outil == "Créer une idée d'affiche":
 
         prompt = (
@@ -219,10 +195,6 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
             "10. Appel à l'action\n\n"
             "Réponds en français."
         )
-
-    # ==============================
-    # PROMPT IMAGE IA
-    # ==============================
 
     else:
 
@@ -257,10 +229,6 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
             "Donne uniquement le prompt final prêt à copier.\n"
             "Réponds en français."
         )
-
-    # ==============================
-    # GEMINI
-    # ==============================
 
     try:
 
