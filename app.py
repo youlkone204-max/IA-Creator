@@ -245,7 +245,7 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
 
         st.markdown("## ✨ Ton résultat")
 
-        st.write(resultat)
+        st.code(resultat, language="text")
 
         st.download_button(
             label="📥 Télécharger le résultat",
