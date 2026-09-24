@@ -13,12 +13,11 @@ st.set_page_config(
 )
 
 # ============================================
-# STYLE PROFESSIONNEL
+# STYLE
 # ============================================
 
 st.markdown("""
 <style>
-
 .main {
     background-color: #f8fafc;
 }
@@ -36,7 +35,6 @@ st.markdown("""
     text-align: center;
     color: white;
     margin-bottom: 25px;
-    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.20);
 }
 
 .hero-title {
@@ -47,7 +45,6 @@ st.markdown("""
 
 .hero-text {
     font-size: 17px;
-    opacity: 0.92;
 }
 
 .section-title {
@@ -55,14 +52,6 @@ st.markdown("""
     font-weight: 750;
     margin-top: 25px;
     margin-bottom: 12px;
-}
-
-.info-card {
-    background: white;
-    padding: 18px;
-    border-radius: 16px;
-    border: 1px solid #e5e7eb;
-    margin-bottom: 15px;
 }
 
 div.stButton > button {
@@ -77,17 +66,12 @@ div.stButton > button {
     min-height: 48px;
 }
 
-textarea {
-    border-radius: 12px !important;
-}
-
 .footer {
     text-align: center;
     color: #6b7280;
     font-size: 13px;
     padding-top: 30px;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -105,13 +89,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ============================================
-# CONNEXION GEMINI
+# GEMINI
 # ============================================
 
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
     client = genai.Client(api_key=api_key)
-
 except Exception:
     st.error("❌ Impossible de connecter Gemini.")
     st.info("Vérifie le secret GEMINI_API_KEY dans Streamlit.")
@@ -193,7 +176,7 @@ plateforme = st.selectbox(
 )
 
 # ============================================
-# OPTIONS IMAGE
+# FORMAT IMAGE
 # ============================================
 
 format_image = ""
@@ -201,7 +184,7 @@ format_image = ""
 if outil == "Créer un prompt d'image IA":
 
     st.markdown(
-        '<div class="section-title">📐 Format de l'image</div>',
+        "<div class='section-title'>📐 Format de l'image</div>",
         unsafe_allow_html=True
     )
 
@@ -216,7 +199,7 @@ if outil == "Créer un prompt d'image IA":
     )
 
 # ============================================
-# OPTIONS VIDÉO
+# DURÉE VIDÉO
 # ============================================
 
 duree = ""
@@ -224,7 +207,7 @@ duree = ""
 if outil == "Créer un script vidéo":
 
     st.markdown(
-        '<div class="section-title">⏱️ Durée de la vidéo</div>',
+        "<div class='section-title'>⏱️ Durée de la vidéo</div>",
         unsafe_allow_html=True
     )
 
@@ -244,7 +227,7 @@ if outil == "Créer un script vidéo":
 # ============================================
 
 st.markdown(
-    '<div class="section-title">📝 Ta demande</div>',
+    "<div class='section-title'>📝 Ta demande</div>",
     unsafe_allow_html=True
 )
 
@@ -256,7 +239,7 @@ sujet = st.text_area(
 )
 
 # ============================================
-# CRÉATION
+# BOUTON CRÉER
 # ============================================
 
 if st.button(
@@ -265,7 +248,6 @@ if st.button(
 ):
 
     if not sujet.strip():
-
         st.warning("⚠️ Écris d'abord ta demande.")
         st.stop()
 
@@ -283,7 +265,8 @@ if st.button(
             + plateforme
             + "\nStyle : "
             + style
-            + "\n\nDonne :\n"
+            + "\n\n"
+            "Donne :\n"
             "1. Titre\n"
             "2. Concept\n"
             "3. Accroche\n"
@@ -338,14 +321,14 @@ if st.button(
             "Commence par une accroche très forte.\n"
             "Respecte la durée demandée.\n"
             "Utilise des phrases courtes et dynamiques.\n\n"
-            "Pour chaque scène indique exactement :\n\n"
-            "SCÈNE 1\n"
-            "Durée :\n"
-            "Ce que l'on voit à l'écran :\n"
-            "Narration ou dialogue :\n"
-            "Texte à l'écran :\n"
-            "Effet ou transition :\n"
-            "Ambiance sonore :\n\n"
+            "Pour chaque scène indique :\n"
+            "SCÈNE\n"
+            "Durée\n"
+            "Ce que l'on voit\n"
+            "Narration ou dialogue\n"
+            "Texte à l'écran\n"
+            "Effet ou transition\n"
+            "Ambiance sonore\n\n"
             "Continue avec les scènes suivantes "
             "jusqu'à couvrir toute la durée.\n\n"
             "À la fin ajoute :\n"
@@ -353,8 +336,6 @@ if st.button(
             "LÉGENDE\n"
             "HASHTAGS\n"
             "APPEL À L'ACTION\n\n"
-            "L'appel à l'action doit encourager les spectateurs "
-            "à s'abonner, aimer la vidéo et commenter.\n\n"
             "Réponds uniquement en français."
         )
 
@@ -459,7 +440,7 @@ if st.button(
         st.success("✅ Création terminée !")
 
         st.markdown(
-            '<div class="section-title">✨ Ton résultat</div>',
+            "<div class='section-title'>✨ Ton résultat</div>",
             unsafe_allow_html=True
         )
 
@@ -521,7 +502,7 @@ if st.button(
         )
 
         # ====================================
-        # TÉLÉCHARGER
+        # TÉLÉCHARGEMENT
         # ====================================
 
         st.download_button(
@@ -535,4 +516,89 @@ if st.button(
     except Exception as e:
 
         st.error(
-            "❌ Une
+            "❌ Une erreur est survenue pendant la génération."
+        )
+
+        st.code(str(e))
+
+# ============================================
+# HISTORIQUE
+# ============================================
+
+st.markdown("---")
+
+st.markdown(
+    "<div class='section-title'>🗂️ Historique</div>",
+    unsafe_allow_html=True
+)
+
+if len(st.session_state.historique) == 0:
+
+    st.info(
+        "Aucune création dans l'historique pour le moment."
+    )
+
+else:
+
+    st.write(
+        "Tes dernières créations sont disponibles ci-dessous."
+    )
+
+    for i, item in enumerate(
+        st.session_state.historique
+    ):
+
+        with st.expander(
+            "📝 "
+            + item["outil"]
+            + " — "
+            + item["sujet"][:50]
+        ):
+
+            st.write(
+                "**Plateforme :**",
+                item["plateforme"]
+            )
+
+            st.write(
+                "**Style :**",
+                item["style"]
+            )
+
+            st.text_area(
+                "Résultat",
+                value=item["resultat"],
+                height=250,
+                key="historique_" + str(i)
+            )
+
+            st.download_button(
+                "📥 Télécharger",
+                data=item["resultat"],
+                file_name=(
+                    "ia_creator_historique_"
+                    + str(i + 1)
+                    + ".txt"
+                ),
+                mime="text/plain",
+                key="download_" + str(i)
+            )
+
+    if st.button("🗑️ Effacer l'historique"):
+
+        st.session_state.historique = []
+
+        st.rerun()
+
+# ============================================
+# PIED DE PAGE
+# ============================================
+
+st.markdown(
+    """
+    <div class="footer">
+        🤖 IA-Creator · Crée plus vite avec l'IA
+    </div>
+    """,
+    unsafe_allow_html=True
+)
