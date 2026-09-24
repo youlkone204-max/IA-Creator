@@ -399,4 +399,21 @@ sujet = st.text_area(
 # CRÉATION
 # ============================================
 
-if
+    if st.button("🗑️ Effacer l'historique"):
+
+        st.session_state.historique = []
+
+        st.rerun()
+
+# ============================================
+# PIED DE PAGE
+# ============================================
+
+st.markdown(
+    """
+    <div class="footer">
+        🤖 IA-Creator · Crée plus vite avec l'IA
+    </div>
+    """,
+    unsafe_allow_html=True
+)
