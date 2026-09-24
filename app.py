@@ -18,14 +18,29 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-.main {
-    background-color: #f8fafc;
-}
-
 .block-container {
     max-width: 850px;
     padding-top: 2rem;
     padding-bottom: 3rem;
+}
+
+.login-box {
+    background: linear-gradient(135deg, #111827, #2563eb);
+    padding: 35px 25px;
+    border-radius: 22px;
+    text-align: center;
+    color: white;
+    margin-bottom: 25px;
+}
+
+.login-title {
+    font-size: 34px;
+    font-weight: 800;
+}
+
+.login-text {
+    font-size: 16px;
+    margin-top: 8px;
 }
 
 .hero {
@@ -76,7 +91,129 @@ div.stButton > button {
 """, unsafe_allow_html=True)
 
 # ============================================
-# EN-TÊTE
+# ÉTAT CONNEXION
+# ============================================
+
+if "connecte" not in st.session_state:
+    st.session_state.connecte = False
+
+if "utilisateur" not in st.session_state:
+    st.session_state.utilisateur = ""
+
+# ============================================
+# ÉCRAN CONNEXION / INSCRIPTION
+# ============================================
+
+if not st.session_state.connecte:
+
+    st.markdown("""
+    <div class="login-box">
+        <div class="login-title">🤖 IA-Creator</div>
+        <div class="login-text">
+            Crée du contenu professionnel avec l'intelligence artificielle
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    choix = st.radio(
+        "Accès",
+        ["🔐 Se connecter", "📝 Créer un compte"],
+        horizontal=True
+    )
+
+    st.markdown(
+        "<div class='section-title'>👤 Tes informations</div>",
+        unsafe_allow_html=True
+    )
+
+    nom = st.text_input(
+        "Nom",
+        placeholder="Ton nom"
+    )
+
+    email = st.text_input(
+        "Adresse e-mail",
+        placeholder="exemple@email.com"
+    )
+
+    mot_de_passe = st.text_input(
+        "Mot de passe",
+        type="password",
+        placeholder="Ton mot de passe"
+    )
+
+    if choix == "📝 Créer un compte":
+
+        confirmation = st.text_input(
+            "Confirmer le mot de passe",
+            type="password",
+            placeholder="Confirme ton mot de passe"
+        )
+
+        if st.button(
+            "🚀 CRÉER MON COMPTE",
+            use_container_width=True
+        ):
+
+            if not nom.strip():
+                st.warning("⚠️ Entre ton nom.")
+
+            elif not email.strip():
+                st.warning("⚠️ Entre ton adresse e-mail.")
+
+            elif not mot_de_passe:
+                st.warning("⚠️ Entre un mot de passe.")
+
+            elif mot_de_passe != confirmation:
+                st.error("❌ Les deux mots de passe sont différents.")
+
+            else:
+                st.session_state.connecte = True
+                st.session_state.utilisateur = nom
+
+                st.success(
+                    "✅ Compte créé pour cette session !"
+                )
+
+                st.rerun()
+
+    else:
+
+        if st.button(
+            "🔑 SE CONNECTER",
+            use_container_width=True
+        ):
+
+            if not email.strip():
+                st.warning("⚠️ Entre ton adresse e-mail.")
+
+            elif not mot_de_passe:
+                st.warning("⚠️ Entre ton mot de passe.")
+
+            else:
+                st.session_state.connecte = True
+                st.session_state.utilisateur = (
+                    nom.strip() if nom.strip() else "Créateur"
+                )
+
+                st.success("✅ Connexion réussie !")
+
+                st.rerun()
+
+    st.markdown(
+        """
+        <div class="footer">
+            🔒 Tes informations seront connectées à un vrai système
+            de comptes dans l'étape suivante.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.stop()
+
+# ============================================
+# APPLICATION
 # ============================================
 
 st.markdown("""
@@ -89,12 +226,32 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ============================================
+# PROFIL CONNECTÉ
+# ============================================
+
+col1, col2 = st.columns([3, 1])
+
+with col1:
+    st.write(
+        "👋 Bienvenue **"
+        + st.session_state.utilisateur
+        + "** !"
+    )
+
+with col2:
+    if st.button("🚪 Sortir"):
+        st.session_state.connecte = False
+        st.session_state.utilisateur = ""
+        st.rerun()
+
+# ============================================
 # GEMINI
 # ============================================
 
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
     client = genai.Client(api_key=api_key)
+
 except Exception:
     st.error("❌ Impossible de connecter Gemini.")
     st.info("Vérifie le secret GEMINI_API_KEY dans Streamlit.")
@@ -112,7 +269,7 @@ if "historique" not in st.session_state:
 # ============================================
 
 st.markdown(
-    '<div class="section-title">🚀 Que veux-tu créer ?</div>',
+    "<div class='section-title'>🚀 Que veux-tu créer ?</div>",
     unsafe_allow_html=True
 )
 
@@ -133,7 +290,7 @@ outil = st.selectbox(
 # ============================================
 
 st.markdown(
-    '<div class="section-title">🎨 Choisis ton style</div>',
+    "<div class='section-title'>🎨 Choisis ton style</div>",
     unsafe_allow_html=True
 )
 
@@ -158,7 +315,7 @@ style = st.selectbox(
 # ============================================
 
 st.markdown(
-    '<div class="section-title">📱 Plateforme</div>',
+    "<div class='section-title'>📱 Plateforme</div>",
     unsafe_allow_html=True
 )
 
@@ -239,366 +396,7 @@ sujet = st.text_area(
 )
 
 # ============================================
-# BOUTON CRÉER
+# CRÉATION
 # ============================================
 
-if st.button(
-    "✨ CRÉER AVEC L'IA",
-    use_container_width=True
-):
-
-    if not sujet.strip():
-        st.warning("⚠️ Écris d'abord ta demande.")
-        st.stop()
-
-    # ========================================
-    # IDÉE
-    # ========================================
-
-    if outil == "Créer une idée":
-
-        prompt = (
-            "Tu es un expert en création de contenu.\n\n"
-            "Crée une idée originale à partir de cette demande :\n"
-            + sujet
-            + "\n\nPlateforme : "
-            + plateforme
-            + "\nStyle : "
-            + style
-            + "\n\n"
-            "Donne :\n"
-            "1. Titre\n"
-            "2. Concept\n"
-            "3. Accroche\n"
-            "4. Déroulement\n"
-            "5. Appel à l'action\n"
-            "6. Hashtags\n\n"
-            "Réponds en français."
-        )
-
-    # ========================================
-    # TEXTE
-    # ========================================
-
-    elif outil == "Créer un texte":
-
-        prompt = (
-            "Tu es un rédacteur professionnel spécialisé "
-            "dans les réseaux sociaux.\n\n"
-            "Crée un texte à partir de cette demande :\n"
-            + sujet
-            + "\n\nPlateforme : "
-            + plateforme
-            + "\nStyle : "
-            + style
-            + "\n\n"
-            "Le texte doit être naturel, clair et accrocheur.\n"
-            "Termine par un appel à l'action.\n"
-            "Ajoute des hashtags pertinents.\n\n"
-            "Réponds en français."
-        )
-
-    # ========================================
-    # SCRIPT VIDÉO
-    # ========================================
-
-    elif outil == "Créer un script vidéo":
-
-        prompt = (
-            "Tu es un scénariste professionnel spécialisé "
-            "dans TikTok, YouTube Shorts et Facebook Reels.\n\n"
-            "Crée un script vidéo professionnel et dynamique.\n\n"
-            "SUJET : "
-            + sujet
-            + "\nPLATEFORME : "
-            + plateforme
-            + "\nSTYLE : "
-            + style
-            + "\nDURÉE : "
-            + duree
-            + "\n\n"
-            "Le script doit être directement utilisable avec CapCut.\n\n"
-            "Commence par une accroche très forte.\n"
-            "Respecte la durée demandée.\n"
-            "Utilise des phrases courtes et dynamiques.\n\n"
-            "Pour chaque scène indique :\n"
-            "SCÈNE\n"
-            "Durée\n"
-            "Ce que l'on voit\n"
-            "Narration ou dialogue\n"
-            "Texte à l'écran\n"
-            "Effet ou transition\n"
-            "Ambiance sonore\n\n"
-            "Continue avec les scènes suivantes "
-            "jusqu'à couvrir toute la durée.\n\n"
-            "À la fin ajoute :\n"
-            "TITRE DE LA VIDÉO\n"
-            "LÉGENDE\n"
-            "HASHTAGS\n"
-            "APPEL À L'ACTION\n\n"
-            "Réponds uniquement en français."
-        )
-
-    # ========================================
-    # AFFICHE
-    # ========================================
-
-    elif outil == "Créer une idée d'affiche":
-
-        prompt = (
-            "Tu es un directeur artistique professionnel.\n\n"
-            "Crée une idée d'affiche professionnelle.\n\n"
-            "Sujet : "
-            + sujet
-            + "\nPlateforme : "
-            + plateforme
-            + "\nStyle : "
-            + style
-            + "\n\n"
-            "Donne :\n"
-            "1. Concept visuel\n"
-            "2. Sujet principal\n"
-            "3. Arrière-plan\n"
-            "4. Éclairage\n"
-            "5. Couleurs\n"
-            "6. Texte principal\n"
-            "7. Texte secondaire\n"
-            "8. Composition\n"
-            "9. Éléments graphiques\n"
-            "10. Appel à l'action\n\n"
-            "Réponds en français."
-        )
-
-    # ========================================
-    # PROMPT IMAGE
-    # ========================================
-
-    else:
-
-        prompt = (
-            "Tu es un expert professionnel en création "
-            "de prompts pour générateurs d'images IA.\n\n"
-            "Crée un prompt d'image détaillé et professionnel.\n\n"
-            "Sujet : "
-            + sujet
-            + "\nStyle : "
-            + style
-            + "\nFormat : "
-            + format_image
-            + "\nPlateforme : "
-            + plateforme
-            + "\n\n"
-            "Décris :\n"
-            "- sujet principal\n"
-            "- apparence\n"
-            "- vêtements\n"
-            "- posture\n"
-            "- expression\n"
-            "- environnement\n"
-            "- arrière-plan\n"
-            "- éclairage\n"
-            "- couleurs\n"
-            "- composition\n"
-            "- profondeur de champ\n"
-            "- ambiance\n"
-            "- détails visuels\n"
-            "- qualité\n\n"
-            "Donne uniquement le prompt final prêt à copier.\n"
-            "Réponds en français."
-        )
-
-    # ========================================
-    # GÉNÉRATION
-    # ========================================
-
-    try:
-
-        with st.spinner("🤖 Gemini est en train de créer..."):
-
-            response = client.models.generate_content(
-                model="gemini-3.5-flash-lite",
-                contents=prompt
-            )
-
-        resultat = response.text
-
-        # ====================================
-        # HISTORIQUE
-        # ====================================
-
-        st.session_state.historique.insert(
-            0,
-            {
-                "outil": outil,
-                "sujet": sujet,
-                "style": style,
-                "plateforme": plateforme,
-                "resultat": resultat
-            }
-        )
-
-        st.success("✅ Création terminée !")
-
-        st.markdown(
-            "<div class='section-title'>✨ Ton résultat</div>",
-            unsafe_allow_html=True
-        )
-
-        st.text_area(
-            "Résultat",
-            value=resultat,
-            height=350,
-            key="resultat_ia"
-        )
-
-        # ====================================
-        # COPIER
-        # ====================================
-
-        resultat_js = (
-            resultat
-            .replace("\\", "\\\\")
-            .replace("`", "\\`")
-            .replace("${", "\\${")
-        )
-
-        components.html(
-            """
-            <button
-                onclick="copierResultat()"
-                style="
-                    width:100%;
-                    padding:14px;
-                    background:#2563eb;
-                    color:white;
-                    border:none;
-                    border-radius:12px;
-                    font-size:16px;
-                    font-weight:bold;
-                    cursor:pointer;
-                "
-            >
-                📋 COPIER LE RÉSULTAT
-            </button>
-
-            <script>
-            function copierResultat() {
-
-                const texte = `""" + resultat_js + """`;
-
-                navigator.clipboard.writeText(texte).then(function() {
-
-                    alert("✅ Résultat copié !");
-
-                }).catch(function() {
-
-                    alert("❌ Impossible de copier automatiquement.");
-
-                });
-            }
-            </script>
-            """,
-            height=65
-        )
-
-        # ====================================
-        # TÉLÉCHARGEMENT
-        # ====================================
-
-        st.download_button(
-            label="📥 Télécharger le résultat",
-            data=resultat,
-            file_name="ia_creator_resultat.txt",
-            mime="text/plain",
-            use_container_width=True
-        )
-
-    except Exception as e:
-
-        st.error(
-            "❌ Une erreur est survenue pendant la génération."
-        )
-
-        st.code(str(e))
-
-# ============================================
-# HISTORIQUE
-# ============================================
-
-st.markdown("---")
-
-st.markdown(
-    "<div class='section-title'>🗂️ Historique</div>",
-    unsafe_allow_html=True
-)
-
-if len(st.session_state.historique) == 0:
-
-    st.info(
-        "Aucune création dans l'historique pour le moment."
-    )
-
-else:
-
-    st.write(
-        "Tes dernières créations sont disponibles ci-dessous."
-    )
-
-    for i, item in enumerate(
-        st.session_state.historique
-    ):
-
-        with st.expander(
-            "📝 "
-            + item["outil"]
-            + " — "
-            + item["sujet"][:50]
-        ):
-
-            st.write(
-                "**Plateforme :**",
-                item["plateforme"]
-            )
-
-            st.write(
-                "**Style :**",
-                item["style"]
-            )
-
-            st.text_area(
-                "Résultat",
-                value=item["resultat"],
-                height=250,
-                key="historique_" + str(i)
-            )
-
-            st.download_button(
-                "📥 Télécharger",
-                data=item["resultat"],
-                file_name=(
-                    "ia_creator_historique_"
-                    + str(i + 1)
-                    + ".txt"
-                ),
-                mime="text/plain",
-                key="download_" + str(i)
-            )
-
-    if st.button("🗑️ Effacer l'historique"):
-
-        st.session_state.historique = []
-
-        st.rerun()
-
-# ============================================
-# PIED DE PAGE
-# ============================================
-
-st.markdown(
-    """
-    <div class="footer">
-        🤖 IA-Creator · Crée plus vite avec l'IA
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+if
