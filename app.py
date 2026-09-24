@@ -1,5 +1,6 @@
 import streamlit as st
 from google import genai
+import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="IA-Creator",
@@ -245,7 +246,53 @@ if st.button("✨ CRÉER AVEC L'IA", use_container_width=True):
 
         st.markdown("## ✨ Ton résultat")
 
-        st.code(resultat, language="text")
+        st.text_area(
+            "Résultat",
+            value=resultat,
+            height=350,
+            key="resultat_ia"
+        )
+
+        resultat_js = (
+            resultat
+            .replace("\\", "\\\\")
+            .replace("`", "\\`")
+            .replace("${", "\\${")
+        )
+
+        components.html(
+            """
+            <button
+                onclick="copierResultat()"
+                style="
+                    width:100%;
+                    padding:14px;
+                    background:#2563eb;
+                    color:white;
+                    border:none;
+                    border-radius:10px;
+                    font-size:16px;
+                    font-weight:bold;
+                    cursor:pointer;
+                "
+            >
+                📋 COPIER LE RÉSULTAT
+            </button>
+
+            <script>
+            function copierResultat() {
+                const texte = `""" + resultat_js + """`;
+
+                navigator.clipboard.writeText(texte).then(function() {
+                    alert("✅ Résultat copié !");
+                }).catch(function() {
+                    alert("❌ Impossible de copier automatiquement.");
+                });
+            }
+            </script>
+            """,
+            height=65
+        )
 
         st.download_button(
             label="📥 Télécharger le résultat",
