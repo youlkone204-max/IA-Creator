@@ -213,6 +213,8 @@ if not st.session_state.connecte:
                             response.user.email or ""
                         )
 
+                        st.session_state.historique = []
+
                         st.success("✅ Connexion réussie !")
                         st.rerun()
 
@@ -385,6 +387,50 @@ except Exception:
     pass
 
 # ============================================================
+# CHARGER L'HISTORIQUE SUPABASE
+# ============================================================
+
+if not st.session_state.get("historique_charge", False):
+
+    try:
+
+        historique_response = (
+            supabase
+            .table("historique")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", desc=True)
+            .execute()
+        )
+
+        donnees = historique_response.data or []
+
+        historique_local = []
+
+        for element in donnees:
+
+            historique_local.append({
+                "id": element.get("id"),
+                "outil": element.get("mode", ""),
+                "style": element.get("style", ""),
+                "plateforme": element.get("plateforme", ""),
+                "demande": element.get("demande", ""),
+                "resultat": element.get("resultat", ""),
+                "created_at": element.get("created_at", "")
+            })
+
+        st.session_state.historique = historique_local
+        st.session_state.historique_charge = True
+
+    except Exception as e:
+
+        st.warning(
+            "⚠️ Impossible de charger l'historique Supabase."
+        )
+
+        st.caption(str(e))
+
+# ============================================================
 # EN-TETE
 # ============================================================
 
@@ -426,6 +472,8 @@ if st.button(
     st.session_state.connecte = False
     st.session_state.utilisateur = None
     st.session_state.email_utilisateur = ""
+    st.session_state.historique = []
+    st.session_state.historique_charge = False
 
     st.rerun()
 
@@ -718,105 +766,3 @@ if st.button(
 
                     components.html(
                         f"""
-                        <button
-                            onclick="navigator.clipboard.writeText(`{texte_js}`).then(() => alert('✅ Texte copié !'))"
-                            style="
-                                width:100%;
-                                padding:14px;
-                                border-radius:14px;
-                                border:1px solid #ddd;
-                                background:white;
-                                font-size:16px;
-                                font-weight:bold;
-                                cursor:pointer;
-                            "
-                        >
-                            📋 Copier le résultat
-                        </button>
-                        """,
-                        height=65
-                    )
-
-                    # ------------------------------------------------
-                    # TELECHARGER
-                    # ------------------------------------------------
-
-                    st.download_button(
-                        "⬇️ Télécharger le résultat",
-                        data=resultat,
-                        file_name="ia_creator_resultat.txt",
-                        mime="text/plain",
-                        use_container_width=True
-                    )
-
-                    # ------------------------------------------------
-                    # HISTORIQUE
-                    # ------------------------------------------------
-
-                    st.session_state.historique.insert(
-                        0,
-                        {
-                            "outil": outil,
-                            "demande": demande,
-                            "resultat": resultat
-                        }
-                    )
-
-            except Exception as e:
-
-                st.error(
-                    "❌ Une erreur est survenue pendant la génération."
-                )
-
-                st.caption(str(e))
-
-# ============================================================
-# HISTORIQUE
-# ============================================================
-
-st.divider()
-
-st.markdown(
-    '<div class="section-title">🕘 Historique de cette session</div>',
-    unsafe_allow_html=True
-)
-
-if st.session_state.historique:
-
-    for element in st.session_state.historique:
-
-        titre = element["demande"][:50]
-
-        with st.expander(
-            f"{element['outil']} — {titre}"
-        ):
-
-            st.write(element["resultat"])
-
-    if st.button(
-        "🗑️ Effacer l'historique",
-        use_container_width=True
-    ):
-
-        st.session_state.historique = []
-        st.rerun()
-
-else:
-
-    st.info(
-        "Aucune création dans cette session."
-    )
-
-# ============================================================
-# FOOTER
-# ============================================================
-
-st.markdown(
-    """
-    <footer>
-        🤖 IA-Creator<br>
-        Crée • Apprends • Développe tes idées avec l'IA
-    </footer>
-    """,
-    unsafe_allow_html=True
-)
