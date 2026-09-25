@@ -4,15 +4,26 @@ from google import genai
 from supabase import create_client
 import json
 
+# ============================================================
+# CONFIGURATION
+# ============================================================
+
 st.set_page_config(
     page_title="IA-Creator",
     page_icon="🤖",
     layout="wide"
 )
 
+# ============================================================
+# STYLE
+# ============================================================
+
 st.markdown("""
 <style>
-.main { background: #f7f9fc; }
+.main {
+    background: #f7f9fc;
+}
+
 .hero {
     padding: 25px;
     border-radius: 18px;
@@ -21,28 +32,39 @@ st.markdown("""
     text-align: center;
     margin-bottom: 25px;
 }
-.hero h1 { font-size: 40px; }
+
+.hero h1 {
+    font-size: 40px;
+}
+
 .section-title {
     font-size: 22px;
     font-weight: bold;
     margin-top: 20px;
     margin-bottom: 10px;
 }
+
 .info-box {
     padding: 15px;
     border-radius: 12px;
     background: #eef4ff;
     border-left: 5px solid #2563eb;
 }
+
 .success-box {
     padding: 15px;
     border-radius: 12px;
     background: #ecfdf5;
     border-left: 5px solid #10b981;
 }
+
+footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #777;
+}
 </style>
 """, unsafe_allow_html=True)
-
 
 # ============================================================
 # SUPABASE
@@ -57,7 +79,6 @@ except Exception:
     st.error("Erreur de connexion à Supabase.")
     st.stop()
 
-
 # ============================================================
 # GEMINI
 # ============================================================
@@ -70,9 +91,8 @@ except Exception:
     st.error("Erreur avec la clé Gemini.")
     st.stop()
 
-
 # ============================================================
-# SESSION
+# SESSION STREAMLIT
 # ============================================================
 
 if "connecte" not in st.session_state:
@@ -84,13 +104,53 @@ if "utilisateur" not in st.session_state:
 if "historique" not in st.session_state:
     st.session_state.historique = []
 
+if "access_token" not in st.session_state:
+    st.session_state.access_token = ""
+
+if "refresh_token" not in st.session_state:
+    st.session_state.refresh_token = ""
+
+# ============================================================
+# RESTAURER LA SESSION SUPABASE
+# ============================================================
+
+if (
+    st.session_state.access_token
+    and st.session_state.refresh_token
+):
+
+    try:
+        session_restore = supabase.auth.set_session(
+            st.session_state.access_token,
+            st.session_state.refresh_token
+        )
+
+        if session_restore and session_restore.user:
+
+            st.session_state.utilisateur = session_restore.user
+            st.session_state.connecte = True
+
+            if session_restore.session:
+
+                st.session_state.access_token = (
+                    session_restore.session.access_token
+                )
+
+                st.session_state.refresh_token = (
+                    session_restore.session.refresh_token
+                )
+
+    except Exception:
+        pass
 
 # ============================================================
 # HISTORIQUE
 # ============================================================
 
 def charger_historique(user_id):
+
     try:
+
         resultat = (
             supabase
             .table("historique")
@@ -99,8 +159,11 @@ def charger_historique(user_id):
             .order("created_at", desc=True)
             .execute()
         )
+
         return resultat.data or []
+
     except Exception:
+
         return []
 
 
@@ -112,7 +175,9 @@ def enregistrer_historique(
     demande,
     resultat
 ):
+
     try:
+
         supabase.table("historique").insert({
             "user_id": str(user_id),
             "mode": mode,
@@ -121,10 +186,12 @@ def enregistrer_historique(
             "demande": demande,
             "resultat": resultat
         }).execute()
-        return True
-    except Exception:
-        return False
 
+        return True
+
+    except Exception:
+
+        return False
 
 # ============================================================
 # PAGE CONNEXION
@@ -144,9 +211,9 @@ if not st.session_state.connecte:
         "📝 Créer un compte"
     ])
 
-    # --------------------------------------------------------
+    # ========================================================
     # CONNEXION
-    # --------------------------------------------------------
+    # ========================================================
 
     with connexion:
 
@@ -176,21 +243,44 @@ if not st.session_state.connecte:
 
                 try:
 
-                    resultat_login = supabase.auth.sign_in_with_password({
-                        "email": email.strip(),
-                        "password": password
-                    })
+                    resultat_login = (
+                        supabase.auth.sign_in_with_password({
+                            "email": email.strip(),
+                            "password": password
+                        })
+                    )
 
                     if resultat_login.user:
 
                         st.session_state.connecte = True
-                        st.session_state.utilisateur = resultat_login.user
 
-                        st.session_state.historique = charger_historique(
-                            resultat_login.user.id
+                        st.session_state.utilisateur = (
+                            resultat_login.user
                         )
 
-                        st.success("Connexion réussie !")
+                        # IMPORTANT :
+                        # On conserve les tokens de connexion.
+                        if resultat_login.session:
+
+                            st.session_state.access_token = (
+                                resultat_login.session.access_token
+                            )
+
+                            st.session_state.refresh_token = (
+                                resultat_login.session.refresh_token
+                            )
+
+                        # On charge l'historique.
+                        st.session_state.historique = (
+                            charger_historique(
+                                resultat_login.user.id
+                            )
+                        )
+
+                        st.success(
+                            "Connexion réussie !"
+                        )
+
                         st.rerun()
 
                 except Exception:
@@ -199,9 +289,9 @@ if not st.session_state.connecte:
                         "Email ou mot de passe incorrect."
                     )
 
-    # --------------------------------------------------------
+    # ========================================================
     # INSCRIPTION
-    # --------------------------------------------------------
+    # ========================================================
 
     with inscription:
 
@@ -233,17 +323,21 @@ if not st.session_state.connecte:
         ):
 
             if not nom:
+
                 st.warning("Entre ton nom.")
 
             elif not email2:
+
                 st.warning("Entre ton email.")
 
             elif len(password2) < 6:
+
                 st.warning(
                     "Le mot de passe doit contenir au moins 6 caractères."
                 )
 
             elif password2 != confirmation:
+
                 st.error(
                     "Les deux mots de passe sont différents."
                 )
@@ -252,22 +346,36 @@ if not st.session_state.connecte:
 
                 try:
 
-                    resultat_signup = supabase.auth.sign_up({
-                        "email": email2.strip(),
-                        "password": password2,
-                        "options": {
-                            "data": {
-                                "full_name": nom.strip()
+                    resultat_signup = (
+                        supabase.auth.sign_up({
+                            "email": email2.strip(),
+                            "password": password2,
+                            "options": {
+                                "data": {
+                                    "full_name": nom.strip()
+                                }
                             }
-                        }
-                    })
+                        })
+                    )
 
                     if resultat_signup.user:
 
                         if resultat_signup.session:
 
                             st.session_state.connecte = True
-                            st.session_state.utilisateur = resultat_signup.user
+
+                            st.session_state.utilisateur = (
+                                resultat_signup.user
+                            )
+
+                            st.session_state.access_token = (
+                                resultat_signup.session.access_token
+                            )
+
+                            st.session_state.refresh_token = (
+                                resultat_signup.session.refresh_token
+                            )
+
                             st.session_state.historique = []
 
                             st.success(
@@ -290,13 +398,15 @@ if not st.session_state.connecte:
 
     st.stop()
 
-
 # ============================================================
 # UTILISATEUR CONNECTÉ
 # ============================================================
 
 user = st.session_state.utilisateur
 
+# ============================================================
+# EN-TÊTE
+# ============================================================
 
 st.markdown("""
 <div class="hero">
@@ -304,7 +414,6 @@ st.markdown("""
     <p>Crée avec l'intelligence artificielle</p>
 </div>
 """, unsafe_allow_html=True)
-
 
 colonne1, colonne2 = st.columns([4, 1])
 
@@ -330,9 +439,10 @@ with colonne2:
         st.session_state.connecte = False
         st.session_state.utilisateur = None
         st.session_state.historique = []
+        st.session_state.access_token = ""
+        st.session_state.refresh_token = ""
 
         st.rerun()
-
 
 # ============================================================
 # OUTIL
@@ -354,7 +464,6 @@ outil = st.selectbox(
     ]
 )
 
-
 # ============================================================
 # STYLE
 # ============================================================
@@ -374,7 +483,6 @@ style = st.selectbox(
     ]
 )
 
-
 # ============================================================
 # PLATEFORME
 # ============================================================
@@ -390,7 +498,6 @@ plateforme = st.selectbox(
         "Toutes les plateformes"
     ]
 )
-
 
 # ============================================================
 # OPTIONS
@@ -411,23 +518,12 @@ if outil == "🎬 Créer un script vidéo":
         ]
     )
 
-
 format_image = ""
 
-if outil == "🎨 Créer une idée d'affiche":
-
-    format_image = st.selectbox(
-        "📐 Format",
-        [
-            "Vertical 9:16",
-            "Carré 1:1",
-            "Horizontal 16:9",
-            "Affiche 4:5"
-        ]
-    )
-
-
-if outil == "🖼️ Créer un prompt d'image IA":
+if (
+    outil == "🎨 Créer une idée d'affiche"
+    or outil == "🖼️ Créer un prompt d'image IA"
+):
 
     format_image = st.selectbox(
         "📐 Format de l'image",
@@ -438,7 +534,6 @@ if outil == "🖼️ Créer un prompt d'image IA":
             "Affiche 4:5"
         ]
     )
-
 
 # ============================================================
 # DEMANDE
@@ -451,10 +546,11 @@ st.markdown(
 
 demande = st.text_area(
     "Explique ce que tu veux créer",
-    placeholder="Exemple : crée une vidéo sur les avantages de l'intelligence artificielle.",
+    placeholder=(
+        "Exemple : crée une vidéo sur les avantages de l'intelligence artificielle."
+    ),
     height=160
 )
-
 
 # ============================================================
 # CREATION
@@ -540,7 +636,9 @@ if st.button(
                 + ". Décris le sujet, la composition, la lumière, l'arrière-plan et les détails."
             )
 
-        with st.spinner("🤖 Création en cours..."):
+        with st.spinner(
+            "🤖 Création en cours..."
+        ):
 
             try:
 
@@ -558,7 +656,6 @@ if st.button(
                 st.error(
                     "Une erreur est survenue avec Gemini."
                 )
-
 
         # ====================================================
         # RESULTAT
@@ -578,11 +675,13 @@ if st.button(
                 key="resultat"
             )
 
-            # ------------------------------------------------
+            # =================================================
             # COPIER
-            # ------------------------------------------------
+            # =================================================
 
-            texte_json = json.dumps(resultat)
+            texte_json = json.dumps(
+                resultat
+            )
 
             code_copie = (
                 "<button onclick='copier()' "
@@ -594,7 +693,9 @@ if st.button(
                 "</button>"
                 "<script>"
                 "function copier(){"
-                "var texte=" + texte_json + ";"
+                "var texte="
+                + texte_json
+                + ";"
                 "navigator.clipboard.writeText(texte);"
                 "document.querySelector('button').innerText='✅ Copié !';"
                 "}"
@@ -606,9 +707,9 @@ if st.button(
                 height=65
             )
 
-            # ------------------------------------------------
+            # =================================================
             # TELECHARGER
-            # ------------------------------------------------
+            # =================================================
 
             st.download_button(
                 "⬇️ Télécharger",
@@ -618,9 +719,9 @@ if st.button(
                 use_container_width=True
             )
 
-            # ------------------------------------------------
-            # SAUVEGARDER
-            # ------------------------------------------------
+            # =================================================
+            # SAUVEGARDER DANS SUPABASE
+            # =================================================
 
             sauvegarde = enregistrer_historique(
                 user.id,
@@ -633,14 +734,21 @@ if st.button(
 
             if sauvegarde:
 
-                st.session_state.historique = charger_historique(
-                    user.id
+                st.session_state.historique = (
+                    charger_historique(
+                        user.id
+                    )
                 )
 
                 st.success(
                     "✅ Création enregistrée dans ton historique."
                 )
 
+            else:
+
+                st.warning(
+                    "Le contenu a été créé, mais l'enregistrement dans l'historique a échoué."
+                )
 
 # ============================================================
 # HISTORIQUE
@@ -651,8 +759,14 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-historique = st.session_state.historique
+# On recharge l'historique depuis Supabase
+# avec la session restaurée.
 
+historique = charger_historique(
+    user.id
+)
+
+st.session_state.historique = historique
 
 if not historique:
 
@@ -709,7 +823,6 @@ else:
                 key="historique_" + identifiant
             )
 
-
 # ============================================================
 # EFFACER HISTORIQUE
 # ============================================================
@@ -741,7 +854,6 @@ if st.button(
         st.error(
             "Impossible de supprimer l'historique."
         )
-
 
 # ============================================================
 # FOOTER
