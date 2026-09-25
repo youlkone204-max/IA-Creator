@@ -1,106 +1,126 @@
 import streamlit as st
 import streamlit.components.v1 as components
 from google import genai
-
+from supabase import create_client
 
 # ============================================================
-# CONFIGURATION
+# IA-CREATOR
+# Comptes réels avec Supabase + génération avec Gemini
 # ============================================================
 
 st.set_page_config(
     page_title="IA-Creator",
     page_icon="🤖",
-    layout="centered"
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-
 # ============================================================
-# DESIGN
+# STYLE
 # ============================================================
 
-st.markdown(
-    """
-    <style>
+st.markdown("""
+<style>
     .stApp {
-        background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
-    }
-
-    .main {
-        max-width: 900px;
-        margin: auto;
+        background: linear-gradient(180deg, #f5f8ff 0%, #eef3ff 100%);
     }
 
     .hero {
-        background: linear-gradient(135deg, #111827, #2563eb);
-        padding: 30px 22px;
-        border-radius: 22px;
-        text-align: center;
+        background: linear-gradient(135deg, #14213d, #2563eb);
+        padding: 45px 25px;
+        border-radius: 28px;
         color: white;
-        margin-bottom: 25px;
-        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.20);
+        text-align: center;
+        margin-bottom: 30px;
+        box-shadow: 0 15px 40px rgba(37, 99, 235, 0.20);
     }
 
     .hero h1 {
-        margin: 0;
-        font-size: 38px;
+        font-size: 42px;
+        margin-bottom: 10px;
         font-weight: 800;
     }
 
     .hero p {
-        margin-top: 8px;
-        font-size: 17px;
+        font-size: 20px;
+        margin: 0;
         opacity: 0.95;
     }
 
     .section-title {
-        font-size: 20px;
+        font-size: 25px;
         font-weight: 800;
-        margin-top: 25px;
-        margin-bottom: 10px;
-        color: #111827;
+        color: #172033;
+        margin-top: 15px;
+        margin-bottom: 15px;
     }
 
-    .welcome {
-        background: white;
+    .info-box {
+        background: #e7f0ff;
+        border-radius: 18px;
         padding: 18px;
-        border-radius: 16px;
-        border: 1px solid #e5e7eb;
+        color: #12508b;
+        margin-top: 15px;
         margin-bottom: 20px;
     }
 
-    .result-box {
-        background: white;
+    .success-box {
+        background: #e8f8ee;
+        border-radius: 18px;
         padding: 18px;
-        border-radius: 16px;
-        border: 1px solid #dbeafe;
-        margin-top: 20px;
+        color: #146c35;
+        margin-bottom: 20px;
     }
 
-    .history-card {
+    .account-box {
         background: white;
-        padding: 15px;
-        border-radius: 14px;
-        border: 1px solid #e5e7eb;
-        margin-bottom: 10px;
+        border-radius: 20px;
+        padding: 18px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.06);
     }
 
-    .footer {
+    footer {
         text-align: center;
-        color: #6b7280;
-        margin-top: 35px;
-        padding: 20px;
-        font-size: 14px;
+        color: #737b8c;
+        margin-top: 50px;
+        padding-bottom: 20px;
     }
 
     div.stButton > button {
-        border-radius: 12px;
+        border-radius: 14px;
         font-weight: 700;
         min-height: 45px;
     }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+</style>
+""", unsafe_allow_html=True)
+
+
+# ============================================================
+# INITIALISATION SUPABASE
+# ============================================================
+
+try:
+    supabase = create_client(
+        st.secrets["SUPABASE_URL"],
+        st.secrets["SUPABASE_KEY"]
+    )
+except Exception as e:
+    st.error("❌ Impossible de connecter Supabase.")
+    st.info("Vérifie les secrets SUPABASE_URL et SUPABASE_KEY dans Streamlit.")
+    st.stop()
+
+
+# ============================================================
+# INITIALISATION GEMINI
+# ============================================================
+
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
+    client = genai.Client(api_key=api_key)
+except Exception:
+    st.error("❌ La clé GEMINI_API_KEY est introuvable.")
+    st.stop()
 
 
 # ============================================================
@@ -111,132 +131,206 @@ if "connecte" not in st.session_state:
     st.session_state.connecte = False
 
 if "utilisateur" not in st.session_state:
-    st.session_state.utilisateur = ""
+    st.session_state.utilisateur = None
+
+if "email_utilisateur" not in st.session_state:
+    st.session_state.email_utilisateur = ""
 
 if "historique" not in st.session_state:
     st.session_state.historique = []
 
 
 # ============================================================
-# ÉCRAN CONNEXION / INSCRIPTION
+# TENTATIVE DE RECUPERATION DE SESSION SUPABASE
+# ============================================================
+
+try:
+    session_response = supabase.auth.get_session()
+
+    if session_response and session_response.user:
+        st.session_state.connecte = True
+        st.session_state.utilisateur = session_response.user
+        st.session_state.email_utilisateur = session_response.user.email or ""
+
+except Exception:
+    pass
+
+
+# ============================================================
+# PAGE DE CONNEXION / INSCRIPTION
 # ============================================================
 
 if not st.session_state.connecte:
 
-    st.markdown(
-        """
-        <div class="hero">
-            <h1>🤖 IA-Creator</h1>
-            <p>Crée avec l'intelligence artificielle</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("""
+    <div class="hero">
+        <h1>🤖 IA-Creator</h1>
+        <p>Crée avec l'intelligence artificielle</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown(
         '<div class="section-title">🔐 Accéder à IA-Creator</div>',
         unsafe_allow_html=True
     )
 
-    mode = st.radio(
+    choix = st.radio(
         "Choisis une option",
         ["🔐 Se connecter", "📝 Créer un compte"],
         horizontal=True
     )
 
-    st.markdown("### 👤 Tes informations")
+    # ========================================================
+    # CONNEXION
+    # ========================================================
 
-    nom = st.text_input(
-        "Nom",
-        placeholder="Exemple : Issa"
-    )
+    if choix == "🔐 Se connecter":
 
-    email = st.text_input(
-        "Adresse e-mail",
-        placeholder="Exemple : exemple@gmail.com"
-    )
+        st.markdown(
+            '<div class="section-title">👤 Tes informations</div>',
+            unsafe_allow_html=True
+        )
 
-    mot_de_passe = st.text_input(
-        "Mot de passe",
-        type="password",
-        placeholder="Entre ton mot de passe"
-    )
+        email = st.text_input(
+            "Adresse e-mail",
+            placeholder="Exemple : exemple@gmail.com"
+        )
 
-    confirmation = ""
+        password = st.text_input(
+            "Mot de passe",
+            type="password",
+            placeholder="Entre ton mot de passe"
+        )
 
-    if mode == "📝 Créer un compte":
-        confirmation = st.text_input(
+        if st.button("🔓 SE CONNECTER", use_container_width=True):
+
+            if not email or not password:
+                st.warning("⚠️ Entre ton adresse e-mail et ton mot de passe.")
+
+            else:
+                try:
+                    response = supabase.auth.sign_in_with_password({
+                        "email": email.strip(),
+                        "password": password
+                    })
+
+                    if response.user:
+                        st.session_state.connecte = True
+                        st.session_state.utilisateur = response.user
+                        st.session_state.email_utilisateur = response.user.email or ""
+
+                        st.success("✅ Connexion réussie !")
+                        st.rerun()
+
+                except Exception as e:
+                    message = str(e)
+
+                    if "Email not confirmed" in message:
+                        st.error(
+                            "📧 Ton adresse e-mail n'est pas encore confirmée. "
+                            "Vérifie ta boîte e-mail."
+                        )
+                    else:
+                        st.error(
+                            "❌ Adresse e-mail ou mot de passe incorrect."
+                        )
+
+    # ========================================================
+    # INSCRIPTION
+    # ========================================================
+
+    else:
+
+        st.markdown(
+            '<div class="section-title">📝 Créer ton compte</div>',
+            unsafe_allow_html=True
+        )
+
+        nom = st.text_input(
+            "Nom",
+            placeholder="Exemple : Issa"
+        )
+
+        email = st.text_input(
+            "Adresse e-mail",
+            placeholder="Exemple : exemple@gmail.com"
+        )
+
+        password = st.text_input(
+            "Mot de passe",
+            type="password",
+            placeholder="Minimum 6 caractères"
+        )
+
+        password2 = st.text_input(
             "Confirmer le mot de passe",
             type="password",
             placeholder="Répète ton mot de passe"
         )
 
-    if mode == "📝 Créer un compte":
+        if st.button("📝 CRÉER MON COMPTE", use_container_width=True):
 
-        if st.button(
-            "🚀 CRÉER MON COMPTE",
-            use_container_width=True
-        ):
+            if not nom or not email or not password or not password2:
+                st.warning("⚠️ Remplis tous les champs.")
 
-            if not nom:
-                st.error("❌ Entre ton nom.")
+            elif len(password) < 6:
+                st.warning(
+                    "⚠️ Le mot de passe doit contenir au moins 6 caractères."
+                )
 
-            elif not email:
-                st.error("❌ Entre ton adresse e-mail.")
-
-            elif not mot_de_passe:
-                st.error("❌ Entre un mot de passe.")
-
-            elif mot_de_passe != confirmation:
+            elif password != password2:
                 st.error("❌ Les deux mots de passe sont différents.")
 
             else:
-                st.session_state.connecte = True
-                st.session_state.utilisateur = nom
+                try:
+                    response = supabase.auth.sign_up({
+                        "email": email.strip(),
+                        "password": password,
+                        "options": {
+                            "data": {
+                                "full_name": nom.strip()
+                            }
+                        }
+                    })
 
-                st.success("✅ Compte créé avec succès !")
-                st.rerun()
+                    if response.user:
 
-    else:
+                        # Si Supabase demande une confirmation e-mail,
+                        # aucune session ne sera créée immédiatement.
+                        if response.session is None:
+                            st.success(
+                                "✅ Compte créé avec succès !"
+                            )
 
-        if st.button(
-            "🔓 SE CONNECTER",
-            use_container_width=True
-        ):
+                            st.info(
+                                "📧 Un e-mail de confirmation peut t'être envoyé. "
+                                "Confirme ton adresse e-mail puis connecte-toi."
+                            )
 
-            if not nom:
-                st.error("❌ Entre ton nom.")
+                        else:
+                            st.session_state.connecte = True
+                            st.session_state.utilisateur = response.user
+                            st.session_state.email_utilisateur = (
+                                response.user.email or ""
+                            )
 
-            elif not email:
-                st.error("❌ Entre ton adresse e-mail.")
+                            st.success("🎉 Bienvenue sur IA-Creator !")
+                            st.rerun()
 
-            elif not mot_de_passe:
-                st.error("❌ Entre ton mot de passe.")
+                except Exception as e:
+                    message = str(e)
 
-            else:
-                st.session_state.connecte = True
-                st.session_state.utilisateur = nom
+                    if "already registered" in message.lower():
+                        st.error(
+                            "❌ Cette adresse e-mail possède déjà un compte."
+                        )
+                    else:
+                        st.error(
+                            "❌ Impossible de créer le compte."
+                        )
 
-                st.success("✅ Connexion réussie !")
-                st.rerun()
-
-    st.info(
-        "ℹ️ Cette première version utilise une connexion de session. "
-        "Les vrais comptes persistants seront ajoutés ensuite."
-    )
-
-    st.markdown(
-        """
-        <div class="footer">
-            🤖 IA-Creator<br>
-            Crée • Apprends • Développe tes idées avec l'IA
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.stop()
-
-
-# ============================================================
-# CONNEXION
+    st.markdown("""
+    <div class="info-box">
+        🔒 Tes comptes sont maintenant gérés par Supabase.
+        <br><br>
+        Tes identifiants ne sont pas enregistrés dans
