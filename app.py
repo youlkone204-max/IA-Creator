@@ -2,107 +2,118 @@ import streamlit as st
 import streamlit.components.v1 as components
 from google import genai
 from supabase import create_client
+import html
+import json
+
 
 # ============================================================
-# IA-CREATOR
+# CONFIGURATION
 # ============================================================
 
 st.set_page_config(
     page_title="IA-Creator",
     page_icon="🤖",
-    layout="centered"
+    layout="wide"
 )
+
 
 # ============================================================
 # STYLE
 # ============================================================
 
-CSS = """
-<style>
-.stApp {
-    background: linear-gradient(180deg, #f5f8ff 0%, #eef3ff 100%);
-}
+st.markdown(
+    """
+    <style>
+    .main {
+        background: #f7f9fc;
+    }
 
-.hero {
-    background: linear-gradient(135deg, #14213d, #2563eb);
-    padding: 45px 25px;
-    border-radius: 28px;
-    color: white;
-    text-align: center;
-    margin-bottom: 30px;
-    box-shadow: 0 15px 40px rgba(37, 99, 235, 0.20);
-}
+    .hero {
+        padding: 25px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #111827, #2563eb);
+        color: white;
+        text-align: center;
+        margin-bottom: 25px;
+    }
 
-.hero h1 {
-    font-size: 42px;
-    margin-bottom: 10px;
-    font-weight: 800;
-}
+    .hero h1 {
+        font-size: 42px;
+        margin-bottom: 5px;
+    }
 
-.hero p {
-    font-size: 20px;
-    margin: 0;
-}
+    .hero p {
+        font-size: 18px;
+        opacity: 0.9;
+    }
 
-.section-title {
-    font-size: 25px;
-    font-weight: 800;
-    color: #172033;
-    margin-top: 15px;
-    margin-bottom: 15px;
-}
+    .section-title {
+        font-size: 22px;
+        font-weight: bold;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
 
-.info-box {
-    background: #e7f0ff;
-    border-radius: 18px;
-    padding: 18px;
-    color: #12508b;
-    margin: 15px 0;
-}
+    .info-box {
+        padding: 15px;
+        border-radius: 12px;
+        background: #eef4ff;
+        border-left: 5px solid #2563eb;
+        margin: 10px 0;
+    }
 
-.success-box {
-    background: #e8f8ee;
-    border-radius: 18px;
-    padding: 18px;
-    color: #146c35;
-    margin-bottom: 20px;
-}
+    .success-box {
+        padding: 15px;
+        border-radius: 12px;
+        background: #ecfdf5;
+        border-left: 5px solid #10b981;
+        margin: 10px 0;
+    }
 
-footer {
-    text-align: center;
-    color: #737b8c;
-    margin-top: 50px;
-    padding-bottom: 20px;
-}
-</style>
-"""
+    footer {
+        text-align: center;
+        margin-top: 40px;
+        color: #777;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-st.markdown(CSS, unsafe_allow_html=True)
 
 # ============================================================
-# SUPABASE
+# CONNEXION SUPABASE
 # ============================================================
 
 try:
+    supabase_url = st.secrets["SUPABASE_URL"]
+    supabase_key = st.secrets["SUPABASE_KEY"]
+
     supabase = create_client(
-        st.secrets["SUPABASE_URL"],
-        st.secrets["SUPABASE_KEY"]
+        supabase_url,
+        supabase_key
     )
-except Exception:
-    st.error("❌ Impossible de connecter Supabase.")
-    st.info("Vérifie SUPABASE_URL et SUPABASE_KEY dans Secrets.")
+
+except Exception as e:
+    st.error("Erreur de connexion à Supabase.")
     st.stop()
 
+
 # ============================================================
-# GEMINI
+# CONNEXION GEMINI
 # ============================================================
 
 try:
-    api_key = st.secrets["GEMINI_API_KEY"]
-    client = genai.Client(api_key=api_key)
+    gemini_key = st.secrets["GEMINI_API_KEY"]
+
+    client = genai.Client(
+        api_key=gemini_key
+    )
+
 except Exception:
-    st.error("❌ GEMINI_API_KEY est introuvable.")
+    st.error("Erreur avec la clé Gemini.")
     st.stop()
+
 
 # ============================================================
 # SESSION
@@ -120,24 +131,61 @@ if "email_utilisateur" not in st.session_state:
 if "historique" not in st.session_state:
     st.session_state.historique = []
 
+
 # ============================================================
-# RECUPERER LA SESSION SUPABASE
+# FONCTION : CHARGER L'HISTORIQUE
 # ============================================================
 
-try:
-    session_response = supabase.auth.get_session()
-
-    if session_response and session_response.user:
-        st.session_state.connecte = True
-        st.session_state.utilisateur = session_response.user
-        st.session_state.email_utilisateur = (
-            session_response.user.email or ""
+def charger_historique(user_id):
+    try:
+        resultat = (
+            supabase
+            .table("historique")
+            .select("*")
+            .eq("user_id", str(user_id))
+            .order("created_at", desc=True)
+            .execute()
         )
-except Exception:
-    pass
+
+        return resultat.data or []
+
+    except Exception:
+        return []
+
 
 # ============================================================
-# CONNEXION / INSCRIPTION
+# FONCTION : SAUVEGARDER DANS L'HISTORIQUE
+# ============================================================
+
+def sauvegarder_historique(
+    user_id,
+    mode,
+    style,
+    plateforme,
+    demande,
+    resultat
+):
+    try:
+        supabase.table("historique").insert(
+            {
+                "user_id": str(user_id),
+                "mode": mode,
+                "style": style,
+                "plateforme": plateforme,
+                "demande": demande,
+                "resultat": resultat
+            }
+        ).execute()
+
+        return True
+
+    except Exception as e:
+        st.warning("Le résultat a été créé, mais n'a pas pu être enregistré.")
+        return False
+
+
+# ============================================================
+# PAGE DE CONNEXION / INSCRIPTION
 # ============================================================
 
 if not st.session_state.connecte:
@@ -153,214 +201,181 @@ if not st.session_state.connecte:
     )
 
     st.markdown(
-        '<div class="section-title">🔐 Accéder à IA-Creator</div>',
+        '<div class="section-title">🔐 Connexion à ton compte</div>',
         unsafe_allow_html=True
     )
 
-    choix = st.radio(
-        "Choisis une option",
-        ["🔐 Se connecter", "📝 Créer un compte"],
-        horizontal=True
+    onglet_connexion, onglet_inscription = st.tabs(
+        ["🔑 Se connecter", "📝 Créer un compte"]
     )
 
     # --------------------------------------------------------
     # CONNEXION
     # --------------------------------------------------------
 
-    if choix == "🔐 Se connecter":
+    with onglet_connexion:
 
-        st.markdown(
-            '<div class="section-title">👤 Tes informations</div>',
-            unsafe_allow_html=True
+        email_connexion = st.text_input(
+            "📧 Adresse email",
+            key="email_connexion"
         )
 
-        email = st.text_input(
-            "Adresse e-mail",
-            placeholder="Exemple : exemple@gmail.com"
-        )
-
-        password = st.text_input(
-            "Mot de passe",
+        password_connexion = st.text_input(
+            "🔒 Mot de passe",
             type="password",
-            placeholder="Entre ton mot de passe"
+            key="password_connexion"
         )
 
         if st.button(
-            "🔓 SE CONNECTER",
+            "🚀 Se connecter",
             use_container_width=True
         ):
 
-            if not email or not password:
+            if not email_connexion or not password_connexion:
 
                 st.warning(
-                    "⚠️ Entre ton adresse e-mail et ton mot de passe."
+                    "Entre ton email et ton mot de passe."
                 )
 
             else:
 
                 try:
 
-                    response = supabase.auth.sign_in_with_password({
-                        "email": email.strip(),
-                        "password": password
-                    })
+                    reponse = supabase.auth.sign_in_with_password(
+                        {
+                            "email": email_connexion.strip(),
+                            "password": password_connexion
+                        }
+                    )
 
-                    if response.user:
+                    if reponse.user:
 
                         st.session_state.connecte = True
-                        st.session_state.utilisateur = response.user
-                        st.session_state.email_utilisateur = (
-                            response.user.email or ""
+                        st.session_state.utilisateur = reponse.user
+                        st.session_state.email_utilisateur = email_connexion.strip()
+
+                        st.session_state.historique = charger_historique(
+                            reponse.user.id
                         )
 
-                        st.session_state.historique = []
-
-                        st.success("✅ Connexion réussie !")
+                        st.success("Connexion réussie !")
                         st.rerun()
-
-                except Exception as e:
-
-                    message = str(e)
-
-                    if "Email not confirmed" in message:
-
-                        st.error(
-                            "📧 Ton adresse e-mail n'est pas encore confirmée."
-                        )
 
                     else:
 
                         st.error(
-                            "❌ Adresse e-mail ou mot de passe incorrect."
+                            "Impossible de se connecter."
                         )
+
+                except Exception as e:
+
+                    st.error(
+                        "Email ou mot de passe incorrect."
+                    )
 
     # --------------------------------------------------------
     # INSCRIPTION
     # --------------------------------------------------------
 
-    else:
+    with onglet_inscription:
 
-        st.markdown(
-            '<div class="section-title">📝 Créer ton compte</div>',
-            unsafe_allow_html=True
+        nom_inscription = st.text_input(
+            "👤 Ton nom",
+            key="nom_inscription"
         )
 
-        nom = st.text_input(
-            "Nom",
-            placeholder="Exemple : Issa"
+        email_inscription = st.text_input(
+            "📧 Ton email",
+            key="email_inscription"
         )
 
-        email = st.text_input(
-            "Adresse e-mail",
-            placeholder="Exemple : exemple@gmail.com"
-        )
-
-        password = st.text_input(
-            "Mot de passe",
+        password_inscription = st.text_input(
+            "🔒 Crée un mot de passe",
             type="password",
-            placeholder="Minimum 6 caractères"
+            key="password_inscription"
         )
 
-        password2 = st.text_input(
-            "Confirmer le mot de passe",
+        password_confirmation = st.text_input(
+            "🔒 Confirme le mot de passe",
             type="password",
-            placeholder="Répète ton mot de passe"
+            key="password_confirmation"
         )
 
         if st.button(
-            "📝 CRÉER MON COMPTE",
+            "✨ Créer mon compte",
             use_container_width=True
         ):
 
-            if not nom or not email or not password or not password2:
+            if not nom_inscription:
+                st.warning("Entre ton nom.")
 
-                st.warning("⚠️ Remplis tous les champs.")
+            elif not email_inscription:
+                st.warning("Entre ton email.")
 
-            elif len(password) < 6:
+            elif not password_inscription:
+                st.warning("Entre un mot de passe.")
 
+            elif password_inscription != password_confirmation:
+                st.error("Les deux mots de passe sont différents.")
+
+            elif len(password_inscription) < 6:
                 st.warning(
-                    "⚠️ Le mot de passe doit contenir au moins 6 caractères."
-                )
-
-            elif password != password2:
-
-                st.error(
-                    "❌ Les deux mots de passe sont différents."
+                    "Le mot de passe doit contenir au moins 6 caractères."
                 )
 
             else:
 
                 try:
 
-                    response = supabase.auth.sign_up({
-                        "email": email.strip(),
-                        "password": password,
-                        "options": {
-                            "data": {
-                                "full_name": nom.strip()
+                    reponse = supabase.auth.sign_up(
+                        {
+                            "email": email_inscription.strip(),
+                            "password": password_inscription,
+                            "options": {
+                                "data": {
+                                    "full_name": nom_inscription.strip()
+                                }
                             }
                         }
-                    })
+                    )
 
-                    if response.user:
+                    if reponse.user:
 
-                        if response.session is None:
-
-                            st.success(
-                                "✅ Compte créé avec succès !"
-                            )
-
-                            st.info(
-                                "📧 Vérifie ta boîte e-mail pour confirmer "
-                                "ton adresse, puis connecte-toi."
-                            )
-
-                        else:
+                        if reponse.session:
 
                             st.session_state.connecte = True
-                            st.session_state.utilisateur = response.user
-                            st.session_state.email_utilisateur = (
-                                response.user.email or ""
-                            )
+                            st.session_state.utilisateur = reponse.user
+                            st.session_state.email_utilisateur = email_inscription.strip()
+                            st.session_state.historique = []
 
                             st.success(
-                                "🎉 Bienvenue sur IA-Creator !"
+                                "Compte créé avec succès !"
                             )
 
                             st.rerun()
 
-                except Exception as e:
+                        else:
 
-                    message = str(e)
-
-                    if "already registered" in message.lower():
-
-                        st.error(
-                            "❌ Cette adresse e-mail possède déjà un compte."
-                        )
+                            st.success(
+                                "Compte créé ! Vérifie ton email si une confirmation est demandée, puis connecte-toi."
+                            )
 
                     else:
 
                         st.error(
-                            "❌ Impossible de créer le compte."
+                            "Impossible de créer le compte."
                         )
 
-    st.markdown(
-        """
-        <div class="info-box">
-            🔒 Tes comptes sont gérés par Supabase.
-            <br><br>
-            Tes identifiants ne sont pas enregistrés dans le code.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+                except Exception as e:
+
+                    st.error(
+                        "Impossible de créer le compte. Vérifie les informations."
+                    )
 
     st.markdown(
         """
         <footer>
-            🤖 IA-Creator<br>
-            Crée • Apprends • Développe tes idées avec l'IA
+            🤖 IA-Creator • Création assistée par intelligence artificielle
         </footer>
         """,
         unsafe_allow_html=True
@@ -368,70 +383,16 @@ if not st.session_state.connecte:
 
     st.stop()
 
+
 # ============================================================
-# UTILISATEUR CONNECTE
+# UTILISATEUR CONNECTÉ
 # ============================================================
 
 user = st.session_state.utilisateur
 
-nom_utilisateur = "Créateur"
-
-try:
-
-    metadata = user.user_metadata or {}
-
-    if metadata.get("full_name"):
-        nom_utilisateur = metadata["full_name"]
-
-except Exception:
-    pass
 
 # ============================================================
-# CHARGER L'HISTORIQUE SUPABASE
-# ============================================================
-
-if not st.session_state.get("historique_charge", False):
-
-    try:
-
-        historique_response = (
-            supabase
-            .table("historique")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("created_at", desc=True)
-            .execute()
-        )
-
-        donnees = historique_response.data or []
-
-        historique_local = []
-
-        for element in donnees:
-
-            historique_local.append({
-                "id": element.get("id"),
-                "outil": element.get("mode", ""),
-                "style": element.get("style", ""),
-                "plateforme": element.get("plateforme", ""),
-                "demande": element.get("demande", ""),
-                "resultat": element.get("resultat", ""),
-                "created_at": element.get("created_at", "")
-            })
-
-        st.session_state.historique = historique_local
-        st.session_state.historique_charge = True
-
-    except Exception as e:
-
-        st.warning(
-            "⚠️ Impossible de charger l'historique Supabase."
-        )
-
-        st.caption(str(e))
-
-# ============================================================
-# EN-TETE
+# EN-TÊTE
 # ============================================================
 
 st.markdown(
@@ -444,63 +405,67 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+
+col1, col2 = st.columns([4, 1])
+
+with col1:
+
+    st.markdown(
+        '<div class="success-box">✅ Tu es connecté à ton compte.</div>',
+        unsafe_allow_html=True
+    )
+
+    st.write(
+        "👋 Bienvenue dans IA-Creator !"
+    )
+
+with col2:
+
+    if st.button(
+        "🚪 Déconnexion",
+        use_container_width=True
+    ):
+
+        try:
+            supabase.auth.sign_out()
+        except Exception:
+            pass
+
+        st.session_state.connecte = False
+        st.session_state.utilisateur = None
+        st.session_state.email_utilisateur = ""
+        st.session_state.historique = []
+
+        st.rerun()
+
+
+# ============================================================
+# OUTILS IA
+# ============================================================
+
 st.markdown(
-    f"""
-    <div class="success-box">
-        👋 Bienvenue <strong>{nom_utilisateur}</strong> !
-        <br>
-        📧 {st.session_state.email_utilisateur}
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-# ============================================================
-# DECONNEXION
-# ============================================================
-
-if st.button(
-    "🚪 Se déconnecter",
-    use_container_width=True
-):
-
-    try:
-        supabase.auth.sign_out()
-    except Exception:
-        pass
-
-    st.session_state.connecte = False
-    st.session_state.utilisateur = None
-    st.session_state.email_utilisateur = ""
-    st.session_state.historique = []
-    st.session_state.historique_charge = False
-
-    st.rerun()
-
-st.divider()
-
-# ============================================================
-# OUTILS
-# ============================================================
-
-st.markdown(
-    '<div class="section-title">🛠️ Tes outils IA</div>',
+    '<div class="section-title">🚀 Que veux-tu créer ?</div>',
     unsafe_allow_html=True
 )
 
 outil = st.selectbox(
-    "Choisis ce que tu veux créer",
+    "Choisis un outil",
     [
         "💡 Créer une idée",
         "✍️ Créer un texte",
         "🎬 Créer un script vidéo",
-        "🎨 Créer une idée d’affiche",
-        "🖼️ Créer un prompt d’image IA"
+        "🎨 Créer une idée d'affiche",
+        "🖼️ Créer un prompt d'image IA"
     ]
 )
 
+
+# ============================================================
+# STYLE
+# ============================================================
+
 style = st.selectbox(
-    "🎨 Choisis un style",
+    "🎨 Choisis le style",
     [
         "Viral et accrocheur",
         "Professionnel",
@@ -514,255 +479,121 @@ style = st.selectbox(
     ]
 )
 
+
+# ============================================================
+# PLATEFORME
+# ============================================================
+
 plateforme = st.selectbox(
-    "📱 Pour quelle plateforme ?",
+    "📱 Plateforme",
     [
         "TikTok",
-        "YouTube",
         "Facebook",
+        "YouTube",
         "Instagram",
         "WhatsApp",
         "Toutes les plateformes"
     ]
 )
 
-format_image = ""
-
-if "prompt d’image" in outil.lower() or "affiche" in outil.lower():
-
-    format_image = st.selectbox(
-        "📐 Format",
-        [
-            "1080 x 1080 - Carré",
-            "1080 x 1920 - Vertical",
-            "1920 x 1080 - Paysage"
-        ]
-    )
-
-duree_video = ""
-
-if "script vidéo" in outil.lower():
-
-    duree_video = st.selectbox(
-        "⏱️ Durée de la vidéo",
-        [
-            "10 secondes",
-            "15 secondes",
-            "30 secondes",
-            "60 secondes"
-        ]
-    )
-
-demande = st.text_area(
-    "📝 Ta demande",
-    placeholder="Exemple : crée une idée de vidéo sur l'intelligence artificielle...",
-    height=150
-)
 
 # ============================================================
-# GENERATION
+# OPTIONS VIDÉO
+# ============================================================
+
+duree = ""
+
+if outil == "🎬 Créer un script vidéo":
+
+    duree = st.selectbox(
+        "⏱️ Durée de la vidéo",
+        [
+            "30 secondes",
+            "60 secondes",
+            "90 secondes",
+            "2 minutes",
+            "3 minutes"
+        ]
+    )
+
+
+# ============================================================
+# FORMAT IMAGE
+# ============================================================
+
+format_image = ""
+
+if outil in [
+    "🎨 Créer une idée d'affiche",
+    "🖼️ Créer un prompt d'image IA"
+]:
+
+    format_image = st.selectbox(
+        "📐 Format de l'image",
+        [
+            "Vertical 9:16",
+            "Carré 1:1",
+            "Horizontal 16:9",
+            "Affiche 4:5"
+        ]
+    )
+
+
+# ============================================================
+# DEMANDE
+# ============================================================
+
+st.markdown(
+    '<div class="section-title">📝 Ta demande</div>',
+    unsafe_allow_html=True
+)
+
+demande = st.text_area(
+    "Explique ce que tu veux créer",
+    placeholder="Exemple : crée une vidéo sur les avantages de l'intelligence artificielle...",
+    height=160
+)
+
+
+# ============================================================
+# CRÉATION
 # ============================================================
 
 if st.button(
-    "✨ CRÉER AVEC L'IA",
+    "✨ Créer avec l'IA",
     use_container_width=True
 ):
 
     if not demande.strip():
 
         st.warning(
-            "⚠️ Écris d'abord ce que tu veux créer."
+            "Écris d'abord ce que tu veux créer."
         )
 
     else:
 
-        # ----------------------------------------------------
-        # PROMPT
-        # ----------------------------------------------------
+        with st.spinner("🤖 L'IA est en train de créer..."):
 
-        if "Créer une idée" in outil:
+            if outil == "💡 Créer une idée":
 
-            instruction = "\n".join([
-                "Tu es un expert en création de contenu.",
-                "",
-                "Crée une idée de contenu originale.",
-                "",
-                "Demande :",
-                demande,
-                "",
-                "Plateforme :",
-                plateforme,
-                "",
-                "Style :",
-                style,
-                "",
-                "Donne :",
-                "1. Le concept",
-                "2. Le titre",
-                "3. L'accroche",
-                "4. Le déroulement",
-                "5. Un appel à l'action",
-                "",
-                "Réponds en français."
-            ])
-
-        elif "Créer un texte" in outil:
-
-            instruction = "\n".join([
-                "Tu es un expert en rédaction et création de contenu.",
-                "",
-                "Crée un texte prêt à publier.",
-                "",
-                "Demande :",
-                demande,
-                "",
-                "Plateforme :",
-                plateforme,
-                "",
-                "Style :",
-                style,
-                "",
-                "Le texte doit être naturel, professionnel et accrocheur.",
-                "Réponds en français."
-            ])
-
-        elif "script vidéo" in outil.lower():
-
-            instruction = "\n".join([
-                "Tu es un expert en création de scripts vidéo.",
-                "",
-                "Crée un script vidéo complet.",
-                "",
-                "Sujet :",
-                demande,
-                "",
-                "Plateforme :",
-                plateforme,
-                "",
-                "Style :",
-                style,
-                "",
-                "Durée :",
-                duree_video,
-                "",
-                "Structure :",
-                "- Accroche",
-                "- Scène 1",
-                "- Scène 2",
-                "- Scène 3",
-                "- Conclusion",
-                "- Appel à l'action",
-                "",
-                "Le script doit être facile à filmer.",
-                "Réponds en français."
-            ])
-
-        elif "affiche" in outil.lower():
-
-            instruction = "\n".join([
-                "Tu es un directeur artistique professionnel.",
-                "",
-                "Crée une idée d'affiche très professionnelle.",
-                "",
-                "Sujet :",
-                demande,
-                "",
-                "Plateforme :",
-                plateforme,
-                "",
-                "Style :",
-                style,
-                "",
-                "Format :",
-                format_image,
-                "",
-                "Décris :",
-                "- Le personnage ou sujet principal",
-                "- La position",
-                "- L'arrière-plan",
-                "- Les couleurs",
-                "- L'éclairage",
-                "- Les éléments graphiques",
-                "- Le titre",
-                "- Le texte secondaire",
-                "- L'appel à l'action",
-                "",
-                "Réponds en français."
-            ])
-
-        else:
-
-            instruction = "\n".join([
-                "Tu es un expert en prompts pour générateurs d'images IA.",
-                "",
-                "Crée un prompt d'image professionnel, détaillé et directement utilisable.",
-                "",
-                "Sujet :",
-                demande,
-                "",
-                "Plateforme :",
-                plateforme,
-                "",
-                "Style :",
-                style,
-                "",
-                "Format :",
-                format_image,
-                "",
-                "Le prompt doit décrire précisément :",
-                "- Le sujet",
-                "- La composition",
-                "- L'environnement",
-                "- L'éclairage",
-                "- Les détails visuels",
-                "- Le style",
-                "- La qualité",
-                "- Le cadrage",
-                "",
-                "Réponds en français."
-            ])
-
-        # ----------------------------------------------------
-        # GENERATION GEMINI
-        # ----------------------------------------------------
-
-        with st.spinner(
-            "🤖 IA-Creator prépare ta création..."
-        ):
-
-            try:
-
-                response = client.models.generate_content(
-                    model="gemini-3.5-flash-lite",
-                    contents=instruction
+                instruction = (
+                    "Tu es un expert en création de contenu. "
+                    "Donne une idée originale et concrète sur le sujet suivant : "
+                    + demande
+                    + ". Style : "
+                    + style
+                    + ". Plateforme : "
+                    + plateforme
+                    + ". Donne un titre accrocheur, le concept, "
+                    "l'accroche et une explication claire."
                 )
 
-                resultat = response.text
+            elif outil == "✍️ Créer un texte":
 
-                if resultat:
-
-                    st.markdown(
-                        '<div class="section-title">✨ Ton résultat</div>',
-                        unsafe_allow_html=True
-                    )
-
-                    st.text_area(
-                        "Résultat",
-                        resultat,
-                        height=400,
-                        key="resultat_final"
-                    )
-
-                    # ------------------------------------------------
-                    # COPIER
-                    # ------------------------------------------------
-
-                    texte_js = (
-                        resultat
-                        .replace("\\", "\\\\")
-                        .replace("`", "\\`")
-                        .replace("${", "\\${")
-                    )
-
-                    components.html(
-                        f"""
+                instruction = (
+                    "Tu es un expert en rédaction et réseaux sociaux. "
+                    "Rédige un texte professionnel et engageant sur : "
+                    + demande
+                    + ". Style : "
+                    + style
+                    + ". Plate
