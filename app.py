@@ -166,7 +166,6 @@ def charger_historique(user_id):
 
         return []
 
-
 def enregistrer_historique(
     user_id,
     mode,
@@ -175,6 +174,29 @@ def enregistrer_historique(
     demande,
     resultat
 ):
+    try:
+        if st.session_state.access_token:
+            supabase.postgrest.auth(
+                st.session_state.access_token
+            )
+
+        supabase.table("historique").insert({
+            "user_id": str(user_id),
+            "mode": mode,
+            "style": style,
+            "plateforme": plateforme,
+            "demande": demande,
+            "resultat": resultat
+        }).execute()
+
+        return True
+
+    except Exception as erreur:
+        st.error(
+            "Erreur Supabase : " + str(erreur)
+        )
+        return False
+
 
     try:
 
